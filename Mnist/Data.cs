@@ -7,5 +7,10 @@ namespace Mnist
     class Data<T> : IData<T>
     {
         public List<T> signal;
+
+        public void Open(string filename)
+        {
+
+        }
     }
 }
