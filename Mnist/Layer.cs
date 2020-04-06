@@ -9,8 +9,18 @@ namespace Mnist
         public int width;
         public IActivationFunction<T> activation;
         public IWeightsMatrix<T> matrix;
-        public INode<T> nodes;
+        public List<INode<T>> nodes;
         public ILayerInfo<T> info;
+
+        public Layer(int nodesCount, int inputVectorSize, T bias, IActivationFunction<T> activation)
+        {
+            width = nodesCount;
+            this.activation = activation;
+            matrix = new WeightsMatrix<T>(nodesCount, inputVectorSize, bias);
+            nodes = new List<INode<T>>(nodesCount);
+            for (int i = 0; i < nodesCount; i++)
+                nodes.Add(new Node<T>(activation));
+        }
 
         public T[] forward(T[] input)
         {

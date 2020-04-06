@@ -8,7 +8,7 @@ namespace Mnist
     {
         public void save(string filename);
         public void load(string filename);
-        public void train(IData<T>[] data, int epochs, ILossFunction loss, ILearningRate rate);
+        public void train(IData<T>[] data, int epochs, ILossFunction<T> loss, ILearningRate<T> rate);
         public T[] predict(IData<T> data);
     }
 }

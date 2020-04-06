@@ -5,20 +5,19 @@ using System.Text;
 
 namespace Mnist
 {
-    public class WeightsMatrix : IWeightsMatrix<float>
+    public class WeightsMatrix<T> : IWeightsMatrix<T>
     {
-        public float[][] w;
+        public T[][] w;
         public int nodesCount;
         public int inputVectorSize;
-        public float[] bias;
+        public T[] bias;
 
-        public WeightsMatrix(int nodesCount, int inputVectorSize, float b)
+        public WeightsMatrix(int nodesCount, int inputVectorSize, T b)
         {
             this.nodesCount = nodesCount;
             this.inputVectorSize = inputVectorSize;
-            float t = 1;
-            this.w = Enumerable.Repeat(Enumerable.Repeat(t, inputVectorSize).ToArray(), nodesCount).ToArray();
-            this.bias = Enumerable.Repeat(b, nodesCount).ToArray();
+            w = Enumerable.Repeat(new T[inputVectorSize], nodesCount).ToArray();
+            bias = Enumerable.Repeat(b, nodesCount).ToArray();
         }
     }
 }

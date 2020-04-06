@@ -4,14 +4,14 @@ using System.Text;
 
 namespace Mnist.Functions
 {
-    class SimpleActivation : IActivationFunction<float>
+    class SimpleActivation<T> : IActivationFunction<T>
     {
-        public float backPropagation(float v)
+        public T backPropagation(T v)
         {
             throw new NotImplementedException();
         }
 
-        public float call(float v)
+        public T call(T v)
         {
             return v;
         }

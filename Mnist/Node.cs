@@ -6,9 +6,13 @@ namespace Mnist
 {
     public class Node<T> : INode<T>
     {
-        public List<Node<T>> input;
-        public List<Node<T>> output;
         public IActivationFunction<T> activation;
+
+        public Node(IActivationFunction<T> activation)
+        {
+            this.activation = activation;
+        }
+
         public T forward()
         {
             throw new NotImplementedException();
