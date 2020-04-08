@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace Mnist
 {
-    public interface IActivationFunction<T>
+    public interface IActivationFunction<T> where T : struct, IEquatable<T>, IFormattable
     {
-        public T call(T v);
-        public T backPropagation(T v);
+        public Vector<T> call(Vector<T> v);
+        public Vector<T> backPropagation(Vector<T> v);
     }
 }

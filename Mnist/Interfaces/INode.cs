@@ -6,6 +6,6 @@ namespace Mnist
 {
     public interface INode<T>
     {
-        public T forward();
+        //public T forward();
     }
 }

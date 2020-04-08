@@ -1,12 +1,14 @@
 ﻿using System;
+using MathNet.Numerics.LinearAlgebra;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Mnist
 {
-    class Data<T> : IData<T>
+    public class Data<T> where T : struct, IEquatable<T>, IFormattable
     {
-        public List<T> signal;
+        public Vector<T> signal;
+        public Vector<T> answer;
 
         public void Open(string filename)
         {
