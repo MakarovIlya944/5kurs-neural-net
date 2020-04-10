@@ -12,7 +12,17 @@ namespace Mnist.Functions
             throw new NotImplementedException();
         }
 
+        public Matrix<T> backPropagation(Matrix<T> v)
+        {
+            throw new NotImplementedException();
+        }
+
         public Vector<T> call(Vector<T> v)
+        {
+            return v.Map(x => f(x));
+        }
+
+        public Matrix<T> call(Matrix<T> v)
         {
             return v.Map(x => f(x));
         }

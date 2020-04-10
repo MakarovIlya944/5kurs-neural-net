@@ -9,5 +9,8 @@ namespace Mnist
     {
         public T call(Vector<T> calc, Vector<T> truly);
         public Vector<T> backPropagation(Vector<T> calc, Vector<T> truly);
+
+        public Vector<T> call(Matrix<T> calc, Matrix<T> truly);
+        public Matrix<T> backPropagation(Matrix<T> calc, Matrix<T> truly);
     }
 }

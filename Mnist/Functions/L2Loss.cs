@@ -20,9 +20,19 @@ namespace Mnist.Functions
             throw new NotImplementedException();
         }
 
+        public Matrix<float> backPropagation(Matrix<float> calc, Matrix<float> truly)
+        {
+            throw new NotImplementedException();
+        }
+
         public float call(Vector<float> calc, Vector<float> truly)
         {
             return (float)(calc-truly).L2Norm();
+        }
+
+        public Vector<float> call(Matrix<float> calc, Matrix<float> truly)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -33,9 +43,19 @@ namespace Mnist.Functions
             throw new NotImplementedException();
         }
 
+        public Matrix<double> backPropagation(Matrix<double> calc, Matrix<double> truly)
+        {
+            throw new NotImplementedException();
+        }
+
         public double call(Vector<double> calc, Vector<double> truly)
         {
             return (calc - truly).L2Norm();
+        }
+
+        public Vector<double> call(Matrix<double> calc, Matrix<double> truly)
+        {
+            throw new NotImplementedException();
         }
     }
 }

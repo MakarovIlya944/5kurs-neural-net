@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using MathNet.Numerics.LinearAlgebra;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Mnist
 {
@@ -14,14 +15,30 @@ namespace Mnist
 
         public int Deep { get => layers.Count; }
 
-        private int LogEpoch = 1;
+        private int _logEpoch = 1;
 
-        public Model(int deep, int width, double init, double b)
+        public Model(int deep, int width, double init, double b, int inputSize = 2, int outputSize = 1)
         {
             layers = new List<Layer>(deep);
+            reverseLayers = new List<Layer>(deep);
             SimpleActivation<double> f = new SimpleActivation<double>();
-            for (int i = 0; i < deep; i++)
-                layers.Add(new Layer(width, width, init, b, f));
+
+            if (deep < 3)
+                throw new Exception("Too few layers!");
+            else if (deep == 3)
+            {
+                layers.Add(new Layer(inputSize, inputSize, init, b, f));
+                layers.Add(new Layer(inputSize, outputSize, init, b, f));
+                layers.Add(new Layer(outputSize, outputSize, init, b, f));
+            }
+            else
+            {
+                layers.Add(new Layer(inputSize, width, init, b, f));
+                for (int i = 1; i < deep - 2; i++)
+                    layers.Add(new Layer(width, width, init, b, f));
+                layers.Add(new Layer(width, outputSize, init, b, f));
+            }
+
             for (int i = deep - 1; i >= 0; i--)
                 reverseLayers.Add(layers[i]);
         }
@@ -36,28 +53,49 @@ namespace Mnist
             throw new NotImplementedException();
         }
 
-        public void train(Data<double>[] data, int epoch, double rate, ILossFunction<double> loss)
+        public void train(Data<double> data, int epoch, double rate, ILossFunction<double> loss)
         {
-            double maxLoss = -1;
-            double currentLoss = -1;
-            double sumCurrentLoss = 0;
+            int j = 0;
+
+            double maxLoss = -1, currentLoss = -1;
+            Vector<double> currentLossVector = Vector<double>.Build.Dense(data.InputDataSize, 0);
+            Matrix<double> signal = data.AllSignal;
+            Matrix<double> answer = data.AllAnswer;
+            foreach (var layer in layers)
+                layer.InputDataSize = data.InputDataSize;
             for (int i = 0; i < epoch; i++)
             {
-                if (i % LogEpoch == 0)
-                    Console.WriteLine($"Epoch #{i}\nMaxLoss {maxLoss}\nCurrentLoss {currentLoss}");
-                sumCurrentLoss = 0;
-                foreach (var e in data)
+                if (i % _logEpoch == 0)
+                    Console.WriteLine($"Epoch #{i}\nMaxLoss {maxLoss}\nCurrentLoss {currentLoss}\n");
+                currentLossVector.Clear();
+
+                j = 0;
+                Console.WriteLine("Forward signal through layers");
+                foreach (var layer in layers)
                 {
-                    Vector<double> d = e.signal;
-                    foreach (var layer in layers)
-                        d = layer.forward(d);
-
-                    sumCurrentLoss += loss.call(d, e.answer);
-
-                    Vector<double> v = loss.backPropagation(d, e.answer);
+                    Console.WriteLine($"--------------------------------------#{++j}--------------------------------\nSignal:");
+                    Console.WriteLine(signal.ToString());
+                    signal = layer.forward(signal);
                 }
-                currentLoss = sumCurrentLoss / (double)data.Length;
+
+                currentLossVector += loss.call(signal, answer);
+                Console.WriteLine($"Current loss-vector: \n{currentLossVector.ToString()}");
+
+                Matrix<double> error = loss.backPropagation(signal, answer);
+                Console.WriteLine($"Current error: \n{error.ToString()}");
+
+                j = 0;
+                Console.WriteLine("Backward signal through layers");
+                foreach (var layer in reverseLayers)
+                { 
+                    error = layer.backPropagation(error, rate);
+                    Console.WriteLine($"#{++j}");
+                    Console.WriteLine(error.ToString());
+                }
+
+                currentLoss = currentLossVector.L2Norm();
                 maxLoss = (currentLoss < maxLoss) ? maxLoss : currentLoss;
+                Console.WriteLine($"Current loss: {currentLoss}");
             }
         }
 

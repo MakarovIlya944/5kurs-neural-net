@@ -15,9 +15,16 @@ namespace Mnist
         public Matrix<double> matrix;
         public Vector<double> bias;
 
-        private Vector<double> z; // v * matrix + bias
+        public int InputDataSize { 
+            set => SetUp(value); 
+            get => B.ColumnCount; 
+        }
 
-        //public List<INode<double>> nodes;
+        private Matrix<double> B; // bias as matrix
+        private Vector<double> zVector; // v * matrix + bias
+        private Matrix<double> zMatrix; // v * matrix + bias
+
+        //public List<INode<double>> nodes;  // for non full-connected
 
         public ILayerInfo<double> info;
 
@@ -27,15 +34,33 @@ namespace Mnist
             this.activation = activation;
             matrix = Matrix<double>.Build.Dense(inputVectorSize, nodesCount, init);
             bias = Vector<double>.Build.Dense(nodesCount, b);
-            //nodes = new List<INode<double>>(nodesCount);
+
+            //nodes = new List<INode<double>>(nodesCount); // for non full-connected
             //for (int i = 0; i < nodesCount; i++)
             //    nodes.Add(new Node<double>(activation));
         }
 
+        private void SetUp(int size)
+        {
+            Vector<double>[] tempBias = new Vector<double>[size];
+            for (int i = 0; i < size; i++)
+                tempBias[i] = Vector<double>.Build.DenseOfVector(bias);
+            B = Matrix<double>.Build.DenseOfColumnVectors(tempBias);
+        }
+
         public Vector<double> forward(Vector<double> input)
         {
-            z = matrix * input + bias;
-            return activation.call(z);
+            zVector = matrix * input + bias;
+            return activation.call(zVector);
+        }
+
+        public Matrix<double> forward(Matrix<double> input)
+        {
+            zMatrix = matrix * input + B;
+            Console.WriteLine($"Z: \n{zMatrix.ToString()}");
+            Matrix<double> t = activation.call(zMatrix);
+            Console.WriteLine($"A: \n{t.ToString()}");
+            return t;
         }
 
         /// <summary>
@@ -45,24 +70,17 @@ namespace Mnist
         /// <param name="rate"></param>
         /// <param name="layerNum">0 - input layer, 1 - hidden layer, 2 - output layer</param> TODO refactor
         /// <returns></returns>
-        public Vector<double> backPropagation(Vector<double> input, double rate, int layerNum)
+        public Vector<double> backPropagation(Vector<double> input, double rate)
         {
-            Matrix<double> ret;
-            switch (layerNum)
-            {
-                case 0:
-
-                    break;
-                case 1:
-                    break;
-                case 2:
-                    //ret = matrix.Transpose() * input.PointwiseMultiply(activation.backPropagation(z));
-                    //matrix -= ret * rate;
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
+            //Matrix<double> ret;
             throw new NotImplementedException();
+        }
+
+        public Matrix<double> backPropagation(Matrix<double> input, double rate)
+        {
+            Matrix<double> ret = activation.backPropagation(zMatrix);
+            matrix -= matrix.Transpose() * ret;
+            return ret;
         }
     }
 }
