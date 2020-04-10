@@ -10,8 +10,8 @@ namespace Mnist
         public Vector<T>[] signal;
         public Vector<T>[] answer;
 
-        public Matrix<T> AllSignal { get => Matrix<T>.Build.DenseOfColumnVectors(signal); }
-        public Matrix<T> AllAnswer { get => Matrix<T>.Build.DenseOfColumnVectors(answer); }
+        public Matrix<T> AllSignal { get => Matrix<T>.Build.DenseOfRowVectors(signal); }
+        public Matrix<T> AllAnswer { get => Matrix<T>.Build.DenseOfRowVectors(answer); }
 
         public int InputDataSize { get => input; }
         private int input;

@@ -27,9 +27,9 @@ namespace Mnist
                 throw new Exception("Too few layers!");
             else if (deep == 3)
             {
-                layers.Add(new Layer(inputSize, inputSize, init, b, f));
-                layers.Add(new Layer(inputSize, outputSize, init, b, f));
-                layers.Add(new Layer(outputSize, outputSize, init, b, f));
+                layers.Add(new Layer(width, inputSize, init, b, f));
+                layers.Add(new Layer(width, width, init, b, f));
+                layers.Add(new Layer(outputSize, width, init, b, f));
             }
             else
             {
@@ -39,6 +39,14 @@ namespace Mnist
                 layers.Add(new Layer(width, outputSize, init, b, f));
             }
 
+            int j = 0;
+            foreach (Layer layer in layers)
+                {
+                    Console.WriteLine($"------------------------#{j++}---------------------");
+                    Console.WriteLine(layer.matrix.ToString());
+                    Console.WriteLine(layer.bias.ToString());
+                }
+                
             for (int i = deep - 1; i >= 0; i--)
                 reverseLayers.Add(layers[i]);
         }
@@ -71,12 +79,15 @@ namespace Mnist
 
                 j = 0;
                 Console.WriteLine("Forward signal through layers");
-                foreach (var layer in layers)
+                for (int k = 0, n = layers.Count - 1; k < n; k++)
                 {
                     Console.WriteLine($"--------------------------------------#{++j}--------------------------------\nSignal:");
                     Console.WriteLine(signal.ToString());
-                    signal = layer.forward(signal);
+                    signal = layers[k].forward(signal);
                 }
+
+                signal *= layers[layers.Count - 1].matrix;
+                Console.WriteLine(signal.ToString());
 
                 currentLossVector += loss.call(signal, answer);
                 Console.WriteLine($"Current loss-vector: \n{currentLossVector.ToString()}");

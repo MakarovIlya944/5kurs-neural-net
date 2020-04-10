@@ -5,7 +5,7 @@ using MathNet.Numerics.LinearAlgebra;
 
 namespace Mnist.Functions
 {
-    class SimpleActivation<T> : IActivationFunction<T> where T : struct, IEquatable<T>, IFormattable
+    class ScaleActivation<T> : IActivationFunction<T> where T : struct, IEquatable<T>, IFormattable
     {
         public Vector<T> backPropagation(Vector<T> v)
         {
@@ -24,6 +24,7 @@ namespace Mnist.Functions
 
         public Matrix<T> call(Matrix<T> v)
         {
+            double max = v.PointwiseAbsoluteMaximum(0);
             return v.Map(x => f(x));
         }
 

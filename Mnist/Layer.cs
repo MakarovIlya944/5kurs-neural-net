@@ -45,18 +45,18 @@ namespace Mnist
             Vector<double>[] tempBias = new Vector<double>[size];
             for (int i = 0; i < size; i++)
                 tempBias[i] = Vector<double>.Build.DenseOfVector(bias);
-            B = Matrix<double>.Build.DenseOfColumnVectors(tempBias);
+            B = Matrix<double>.Build.DenseOfRowVectors(tempBias);
         }
 
         public Vector<double> forward(Vector<double> input)
         {
-            zVector = matrix * input + bias;
+            zVector = input * matrix + bias;
             return activation.call(zVector);
         }
 
         public Matrix<double> forward(Matrix<double> input)
         {
-            zMatrix = matrix * input + B;
+            zMatrix = input * matrix + B;
             Console.WriteLine($"Z: \n{zMatrix.ToString()}");
             Matrix<double> t = activation.call(zMatrix);
             Console.WriteLine($"A: \n{t.ToString()}");

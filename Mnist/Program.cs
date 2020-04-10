@@ -1,5 +1,4 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
-using Microsoft.Extensions.Logging;
 using Mnist.Functions;
 using System;
 
