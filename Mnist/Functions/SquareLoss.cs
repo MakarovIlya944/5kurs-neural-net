@@ -28,8 +28,8 @@ namespace Mnist.Functions
 
         public Vector<double> call(Matrix<double> calc, Matrix<double> truly)
         {
-            var c = calc.EnumerateColumns();
-            var t = truly.EnumerateColumns();
+            var c = calc.EnumerateRows();
+            var t = truly.EnumerateRows();
             List<double> answer = new List<double>();
 
             for (int i = 0, n = c.Count(); i < n; i++)

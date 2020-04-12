@@ -24,7 +24,7 @@ namespace Mnist
 
         static void Train()
         {
-            Model m = new Model(3, 3, 1, 0.5);
+            Model m = new Model(3, 3, 2, 0.5);
 
             Vector<double>[] input = new Vector<double>[4];
             input[0] = Vector<double>.Build.Dense(new double[2] { 0, 0 });
@@ -40,7 +40,7 @@ namespace Mnist
 
             Data<double> data = new Data<double>(input, output);
 
-            m.train(data, 1, 0.1, new SquareLoss());
+            m.train(data, 2, 0.1, new SquareLoss());
         }
     }
 }

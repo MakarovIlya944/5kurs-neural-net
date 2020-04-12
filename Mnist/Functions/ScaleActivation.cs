@@ -1,55 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.Optimization;
 
 namespace Mnist.Functions
 {
-    class ScaleActivation<T> : IActivationFunction<T> where T : struct, IEquatable<T>, IFormattable
+    class ScaleActivation : IActivationFunction<double> 
     {
-        public Vector<T> backPropagation(Vector<T> v)
+        public Vector<double> backPropagation(Vector<double> v)
         {
             throw new NotImplementedException();
         }
 
-        public Matrix<T> backPropagation(Matrix<T> v)
+        public Matrix<double> backPropagation(Matrix<double> v)
         {
             throw new NotImplementedException();
         }
 
-        public Vector<T> call(Vector<T> v)
+        public Vector<double> call(Vector<double> v)
         {
-            return v.Map(x => f(x));
+            return f(v);
         }
 
-        public Matrix<T> call(Matrix<T> v)
+        public Matrix<double> call(Matrix<double> m)
         {
-            double max = v.PointwiseAbsoluteMaximum(0);
-            return v.Map(x => f(x));
+            List<Vector<double>> a = new List<Vector<double>>(m.RowCount);
+            foreach (Vector<double> v in m.EnumerateRows())
+                a.Add(f(v));
+
+            return  Matrix<double>.Build.DenseOfRowVectors(a);
         }
 
-        private T f(T x)
+        private Vector<double> f(Vector<double> x)
         {
-            if (x is double) return (T)(object)f((double)(object)x);
-            //else if(x is double) return (T)(object)f(x);
-
-            throw new NotImplementedException();
-        }
-
-        private float f(float x)
-        {
-            if (x > 0)
-                return x;
-            else
-                return 0;
-        }
-
-        private double f(double x)
-        {
-            if (x > 0)
-                return x;
-            else
-                return 0;
+            double max = x[0];
+            foreach (double e in x)
+                max = Math.Max(max, e);
+            return x.Map(e => e = e > 0 ? e / max : 0);
         }
     }
 }

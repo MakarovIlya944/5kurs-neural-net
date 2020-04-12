@@ -15,37 +15,43 @@ namespace Mnist
 
         public int Deep { get => layers.Count; }
 
-        private int _logEpoch = 1;
+        static private int _logEpoch = 1;
 
         public Model(int deep, int width, double init, double b, int inputSize = 2, int outputSize = 1)
         {
             layers = new List<Layer>(deep);
             reverseLayers = new List<Layer>(deep);
-            SimpleActivation<double> f = new SimpleActivation<double>();
+            ReLU f1 = new ReLU();
+            ScaleActivation f2 = new ScaleActivation();
 
-            if (deep < 3)
+            if (deep < 2)
                 throw new Exception("Too few layers!");
+            else if(deep == 2)
+            {
+                layers.Add(new Layer(width, inputSize, init, b, f1));
+                layers.Add(new Layer(outputSize, width, init, b, f2));
+            }
             else if (deep == 3)
             {
-                layers.Add(new Layer(width, inputSize, init, b, f));
-                layers.Add(new Layer(width, width, init, b, f));
-                layers.Add(new Layer(outputSize, width, init, b, f));
+                layers.Add(new Layer(width, inputSize, init, b, f1));
+                layers.Add(new Layer(width, width, init, b, f1));
+                layers.Add(new Layer(outputSize, width, init, b, f2));
             }
             else
             {
-                layers.Add(new Layer(inputSize, width, init, b, f));
+                layers.Add(new Layer(inputSize, width, init, b, f1));
                 for (int i = 1; i < deep - 2; i++)
-                    layers.Add(new Layer(width, width, init, b, f));
-                layers.Add(new Layer(width, outputSize, init, b, f));
+                    layers.Add(new Layer(width, width, init, b, f1));
+                layers.Add(new Layer(width, outputSize, init, b, f2));
             }
 
-            int j = 0;
-            foreach (Layer layer in layers)
-                {
-                    Console.WriteLine($"------------------------#{j++}---------------------");
-                    Console.WriteLine(layer.matrix.ToString());
-                    Console.WriteLine(layer.bias.ToString());
-                }
+            //int j = 0;
+            //foreach (Layer layer in layers)
+            //    {
+            //        Console.WriteLine($"------------------------#{j++}---------------------");
+            //        Console.WriteLine(layer.matrix.ToString());
+            //        Console.WriteLine(layer.bias.ToString());
+            //    }
                 
             for (int i = deep - 1; i >= 0; i--)
                 reverseLayers.Add(layers[i]);
@@ -63,50 +69,73 @@ namespace Mnist
 
         public void train(Data<double> data, int epoch, double rate, ILossFunction<double> loss)
         {
-            int j = 0;
 
-            double maxLoss = -1, currentLoss = -1;
+            double maxLoss = -1, currentLoss;
             Vector<double> currentLossVector = Vector<double>.Build.Dense(data.InputDataSize, 0);
-            Matrix<double> signal = data.AllSignal;
+            Matrix<double> signal;
             Matrix<double> answer = data.AllAnswer;
+
+            int index;
+
             foreach (var layer in layers)
                 layer.InputDataSize = data.InputDataSize;
+
             for (int i = 0; i < epoch; i++)
             {
+                signal = data.AllSignal;
                 if (i % _logEpoch == 0)
-                    Console.WriteLine($"Epoch #{i}\nMaxLoss {maxLoss}\nCurrentLoss {currentLoss}\n");
+                {
+                    Console.WriteLine($"==================================================");
+                    Console.WriteLine($"Epoch #{i}\n");
+                }
                 currentLossVector.Clear();
 
-                j = 0;
-                Console.WriteLine("Forward signal through layers");
-                for (int k = 0, n = layers.Count - 1; k < n; k++)
+                //Console.WriteLine("Forward signal through layers");
+                for (int k = 0, n = layers.Count; k < n; k++)
                 {
-                    Console.WriteLine($"--------------------------------------#{++j}--------------------------------\nSignal:");
-                    Console.WriteLine(signal.ToString());
+                    //Console.WriteLine($"--------------------------------------#{k}--------------------------------\nSignal:");
+                    //Console.WriteLine(signal.ToString());
                     signal = layers[k].forward(signal);
                 }
 
-                signal *= layers[layers.Count - 1].matrix;
-                Console.WriteLine(signal.ToString());
+                if (i % _logEpoch == 0)
+                    Console.WriteLine(signal.ToString());
 
-                currentLossVector += loss.call(signal, answer);
-                Console.WriteLine($"Current loss-vector: \n{currentLossVector.ToString()}");
+                Vector<double> v = loss.call(signal, answer);
+                currentLossVector += v;
+                //Console.WriteLine($"Current loss-vector: \n{currentLossVector.ToString()}");
 
                 Matrix<double> error = loss.backPropagation(signal, answer);
-                Console.WriteLine($"Current error: \n{error.ToString()}");
+                //Console.WriteLine($"Current error: \n{error.ToString()}");
+                error = layers[layers.Count - 1].backPropagation(layers[layers.Count - 2].A.Transpose(), error, rate);
 
-                j = 0;
-                Console.WriteLine("Backward signal through layers");
-                foreach (var layer in reverseLayers)
+                //Console.WriteLine("Backward signal through layers");
+                
+                for (int k = layers.Count - 2; k > 0; k--)
                 { 
-                    error = layer.backPropagation(error, rate);
-                    Console.WriteLine($"#{++j}");
-                    Console.WriteLine(error.ToString());
+                    error = layers[k].backPropagation(layers[k].A.Transpose(), error * layers[k+1].matrix.Transpose(), rate);
+                    //Console.WriteLine($"#{k}");
+                    //Console.WriteLine(error.ToString());
                 }
+
+                layers[0].backPropagation(data.AllSignal.Transpose(), error * layers[1].matrix.Transpose(), rate);
 
                 currentLoss = currentLossVector.L2Norm();
                 maxLoss = (currentLoss < maxLoss) ? maxLoss : currentLoss;
-                Console.WriteLine($"Current loss: {currentLoss}");
+
+                index = 0;
+                    Console.WriteLine($"---------------------------------------------------");
+                foreach (Layer layer in layers)
+                {
+                    Console.WriteLine($"Layer #{index}\nW:{layer.matrix}");
+                }
+                Console.WriteLine($"---------------------------------------------------");
+
+                if (i % _logEpoch == 0)
+                {
+                    Console.WriteLine($"Current loss: {currentLoss}\nMaxLoss: {maxLoss}");
+                    Console.WriteLine($"==================================================\n");
+                }
             }
         }
 

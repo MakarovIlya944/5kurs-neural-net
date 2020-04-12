@@ -23,6 +23,11 @@ namespace Mnist
         private Matrix<double> B; // bias as matrix
         private Vector<double> zVector; // v * matrix + bias
         private Matrix<double> zMatrix; // v * matrix + bias
+        private Vector<double> aVector; // f(zVector)
+        private Matrix<double> aMatrix; // f(zMatrix)
+
+        public Matrix<double> Z { set => zMatrix = value; }
+        public Matrix<double> A { set => aMatrix = value; get => aMatrix; }
 
         //public List<INode<double>> nodes;  // for non full-connected
 
@@ -57,10 +62,10 @@ namespace Mnist
         public Matrix<double> forward(Matrix<double> input)
         {
             zMatrix = input * matrix + B;
-            Console.WriteLine($"Z: \n{zMatrix.ToString()}");
-            Matrix<double> t = activation.call(zMatrix);
-            Console.WriteLine($"A: \n{t.ToString()}");
-            return t;
+            //Console.WriteLine($"Z: \n{zMatrix.ToString()}");
+            aMatrix = activation.call(zMatrix);
+            //Console.WriteLine($"A: \n{aMatrix.ToString()}");
+            return aMatrix;
         }
 
         /// <summary>
@@ -76,11 +81,16 @@ namespace Mnist
             throw new NotImplementedException();
         }
 
-        public Matrix<double> backPropagation(Matrix<double> input, double rate)
+        public Matrix<double> backPropagation(Matrix<double> prevW, Matrix<double> input, double rate)
         {
-            Matrix<double> ret = activation.backPropagation(zMatrix);
-            matrix -= matrix.Transpose() * ret;
-            return ret;
+            Matrix<double> fz = activation.backPropagation(zMatrix);
+            //Console.WriteLine($"f(Z): \n{fz.ToString()}");
+            Matrix<double> delta = input.Map2((x,y) => x*y*rate, fz);
+            //Console.WriteLine($"delta: \n{delta.ToString()}");
+            Console.WriteLine($"W: \n{matrix.ToString()}");
+            matrix -= prevW * delta;
+            Console.WriteLine($"W: \n{matrix.ToString()}");
+            return delta;
         }
     }
 }
