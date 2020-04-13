@@ -22,7 +22,7 @@ namespace Mnist
             layers = new List<Layer>(deep);
             reverseLayers = new List<Layer>(deep);
             ReLU f1 = new ReLU();
-            ScaleActivation f2 = new ScaleActivation();
+            SoftMax f2 = new SoftMax(10);
 
             if (deep < 2)
                 throw new Exception("Too few layers!");

@@ -6,34 +6,25 @@ namespace Mnist.Functions
 {
     public class SoftMax : BaseActivation
     {
+        int dim;
+
+        public SoftMax(int dim)
+        {
+            this.dim = dim;
+        }
+
         override protected Vector<double> f(Vector<double> x)
         {
             double s = x.Map(e => Math.Exp(e)).Sum();
             return x.Map(e => e = Math.Exp(e)/s);
         }
 
-        override public Matrix<double> call(Matrix<double> m)
+        override protected Vector<double> df(Vector<double> x)
         {
-            List<Vector<double>> a = new List<Vector<double>>(m.RowCount);
-            foreach (Vector<double> v in m.EnumerateRows())
-                a.Add(f(v));
-
-            return Matrix<double>.Build.DenseOfRowVectors(a);
-        }
-
-        override public Matrix<double> backPropagation(Matrix<double> m)
-        {
-            List<Vector<double>> a = new List<Vector<double>>(m.RowCount);
-
-            for (int i = 0, n = m.RowCount; i < n; i++)
-            {
-                
-            }
-
-            foreach (Vector<double> v in m.EnumerateRows())
-                a.Add(df(v));
-
-            return Matrix<double>.Build.DenseOfRowVectors(a);
+            Vector<double> v = f(x);
+            Matrix<double> dm = Matrix<double>.Build.Dense(dim, dim);
+            dm = dm.MapIndexed((i, j, val) => v[i] * (i == j ? 1 : 0 - v[j]));
+            return x * dm;
         }
     }
 }
