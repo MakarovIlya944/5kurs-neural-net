@@ -67,7 +67,7 @@ namespace Mnist
             throw new NotImplementedException();
         }
 
-        public void train(Data<double> data, int epoch, double rate, ILossFunction<double> loss)
+        public void train(Data data, int epoch, double rate, ILossFunction<double> loss)
         {
 
             double maxLoss = -1, currentLoss;
@@ -139,7 +139,7 @@ namespace Mnist
             }
         }
 
-        public Vector<double> predict(Data<double> data)
+        public Vector<double> predict(Data data)
         {
             throw new NotImplementedException();
         }

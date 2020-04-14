@@ -24,7 +24,7 @@ namespace Mnist
 
         static void Train()
         {
-            Model m = new Model(3, 3, 2, 0.5);
+            int inputSize = 28 * 28;
 
             Vector<double>[] input = new Vector<double>[4];
             input[0] = Vector<double>.Build.Dense(new double[2] { 0, 0 });
@@ -38,8 +38,9 @@ namespace Mnist
             output[2] = Vector<double>.Build.Dense(new double[1] { 1 });
             output[3] = Vector<double>.Build.Dense(new double[1] { 0 });
 
-            Data<double> data = new Data<double>(input, output);
-
+            Data data = new Data(inputSize, 10);
+            data.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte");
+            Model m = new Model(3, 3, 1, 0.5, inputSize, 10);
             m.train(data, 2, 0.1, new SquareLoss());
         }
     }
