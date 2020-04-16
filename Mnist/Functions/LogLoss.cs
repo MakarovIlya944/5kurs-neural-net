@@ -18,7 +18,7 @@ namespace Mnist.Functions
     {
         public double call(Vector<double> calc, Vector<double> truly)
         {
-            return -(calc.Map2((x, y) => y * Math.Log(x), truly).Sum());
+            return -(calc.Map2((x, y) => x * Math.Log(y), truly).Sum());
         }
 
         public Vector<double> backPropagation(Vector<double> calc, Vector<double> truly)
@@ -42,12 +42,12 @@ namespace Mnist.Functions
         {
             var c = calc.EnumerateRows();
             var t = truly.EnumerateRows();
-            Matrix<double> answer = Matrix<double>.Build.Dense(truly.RowCount, truly.ColumnCount);
+            List<Vector<double>> answer = new List<Vector<double>>(truly.RowCount);
 
             for (int i = 0, n = calc.RowCount; i < n; i++)
-                answer.Add(call(c.ElementAt(i), t.ElementAt(i)));
+                answer.Add(backPropagation(c.ElementAt(i), t.ElementAt(i)));
 
-            return answer;
+            return Matrix<double>.Build.DenseOfRowVectors(answer);
         }
     }
 }

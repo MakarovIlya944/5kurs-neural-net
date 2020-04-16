@@ -15,6 +15,8 @@ namespace Mnist
 
         public int Deep { get => layers.Count; }
 
+        public int LogEpoch { get => _logEpoch; set => _logEpoch = value; }
+
         static private int _logEpoch = 5;
 
         public Model(int deep, int width, double init, double b, int inputSize = 2, int outputSize = 1)
@@ -61,7 +63,7 @@ namespace Mnist
         {
             layers = new List<Layer>(deep);
             reverseLayers = new List<Layer>(deep);
-            ReLU f1 = new ReLU();
+            ReLU f1 = new ReLU(0.01);
             SoftMax f2 = new SoftMax(10);
 
             if (deep < 2)
@@ -71,18 +73,12 @@ namespace Mnist
                 layers.Add(new Layer(width[0], inputSize, init[0], bias[0], f1));
                 layers.Add(new Layer(outputSize, width[0], init[1], bias[1], f2));
             }
-            else if (deep == 3)
-            {
-                layers.Add(new Layer(width[0], inputSize, init[0], bias[0], f1));
-                layers.Add(new Layer(width[1], width[0], init[1], bias[1], f1));
-                layers.Add(new Layer(outputSize, width[1], init[2], bias[2], f2));
-            }
             else
             {
                 layers.Add(new Layer(width[0], inputSize, init[0], bias[0], f1));
-                for (int i = 1; i < deep - 2; i++)
+                for (int i = 1; i < deep - 1; i++)
                     layers.Add(new Layer(width[i], width[i-1], init[i], bias[i], f1));
-                layers.Add(new Layer(outputSize, width[deep - 1], init[2], bias[2], f2));
+                layers.Add(new Layer(outputSize, width[deep - 2], init[2], bias[2], f2));
             }
 
             //int j = 0;
@@ -109,7 +105,7 @@ namespace Mnist
 
         public void train(Data data, int epoch, double rate, ILossFunction<double> loss)
         {
-            double maxLoss = -1, currentLoss;
+            double maxLoss = -1, currentLoss, prevLoss = -1;
             Vector<double> currentLossVector = Vector<double>.Build.Dense(data.InputDataSize, 0);
             Matrix<double> signal;
             Matrix<double> answer = data.AllAnswer;
@@ -174,9 +170,10 @@ namespace Mnist
 
                 if (i % _logEpoch == 0)
                 {
-                    Console.WriteLine($"Current loss: {currentLoss}\nMaxLoss: {maxLoss}");
+                    Console.WriteLine($"Previous loss: {prevLoss}\nCurrent loss: {currentLoss}\nMaxLoss: {maxLoss}");
                     Console.WriteLine($"==================================================\n");
                 }
+                prevLoss = currentLoss;
             }
         }
 
