@@ -87,9 +87,9 @@ namespace Mnist
             //Console.WriteLine($"f(Z): \n{fz.ToString()}");
             Matrix<double> delta = input.Map2((x,y) => x*y*rate, fz);
             //Console.WriteLine($"delta: \n{delta.ToString()}");
-            Console.WriteLine($"W: \n{matrix.ToString()}");
+            //Console.WriteLine($"W: \n{matrix.ToString()}");
             matrix -= prevW * delta;
-            Console.WriteLine($"W: \n{matrix.ToString()}");
+            //Console.WriteLine($"W: \n{matrix.ToString()}");
             return delta;
         }
     }
