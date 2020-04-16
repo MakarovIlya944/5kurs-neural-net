@@ -33,14 +33,21 @@ namespace Mnist.Functions
             List<double> answer = new List<double>();
 
             for (int i = 0, n = calc.RowCount; i < n; i++)
-                answer.Add((t.ElementAt(i) - c.ElementAt(i)).Map(x => x * x).Sum() / 2);
+                answer.Add(call(c.ElementAt(i),t.ElementAt(i)));
 
             return Vector<double>.Build.DenseOfEnumerable(answer);
         }
 
         public Matrix<double> backPropagation(Matrix<double> calc, Matrix<double> truly)
         {
-            return -(truly - calc);
+            var c = calc.EnumerateRows();
+            var t = truly.EnumerateRows();
+            Matrix<double> answer = Matrix<double>.Build.Dense(truly.RowCount, truly.ColumnCount);
+
+            for (int i = 0, n = calc.RowCount; i < n; i++)
+                answer.Add(call(c.ElementAt(i), t.ElementAt(i)));
+
+            return answer;
         }
     }
 }
