@@ -63,12 +63,12 @@ namespace Mnist
         {
             layers = new List<Layer>(deep);
             reverseLayers = new List<Layer>(deep);
-            ReLU f1 = new ReLU(0.01);
+            ReLU f1 = new ReLU(0.001);
             SoftMax f2 = new SoftMax(10);
 
             if (deep < 2)
                 throw new Exception("Too few layers!");
-            else if(deep == 2)
+            else if (deep == 2)
             {
                 layers.Add(new Layer(width[0], inputSize, init[0], bias[0], f1));
                 layers.Add(new Layer(outputSize, width[0], init[1], bias[1], f2));
@@ -77,8 +77,8 @@ namespace Mnist
             {
                 layers.Add(new Layer(width[0], inputSize, init[0], bias[0], f1));
                 for (int i = 1; i < deep - 1; i++)
-                    layers.Add(new Layer(width[i], width[i-1], init[i], bias[i], f1));
-                layers.Add(new Layer(outputSize, width[deep - 2], init[2], bias[2], f2));
+                    layers.Add(new Layer(width[i], width[i - 1], init[i], bias[i], f1));
+                layers.Add(new Layer(outputSize, width[deep - 2], init[deep - 1], bias[deep - 1], f2));
             }
 
             //int j = 0;
@@ -88,7 +88,10 @@ namespace Mnist
             //        Console.WriteLine(layer.matrix.ToString());
             //        Console.WriteLine(layer.bias.ToString());
             //    }
-                
+
+            for (int i = 0; i < deep - 1; i++)
+                layers[i].RandomMatrix(1, 1);
+
             for (int i = deep - 1; i >= 0; i--)
                 reverseLayers.Add(layers[i]);
         }
@@ -136,7 +139,7 @@ namespace Mnist
                 if (i % _logEpoch == 0)
                 {
                     //Console.WriteLine($"--------------------------------------#{layers.Count-1}--------------------------------\nSignal:");
-                    Console.WriteLine(signal.ToString());
+                    Console.WriteLine(signal.Transpose().ToString());
                 }
 
                 Vector<double> v = loss.call(signal, answer);

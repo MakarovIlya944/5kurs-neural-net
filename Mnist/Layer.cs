@@ -15,9 +15,9 @@ namespace Mnist
         public Matrix<double> matrix;
         public Vector<double> bias;
 
-        public int InputDataSize { 
-            set => SetUp(value); 
-            get => B.ColumnCount; 
+        public int InputDataSize {
+            set => SetUp(value);
+            get => B.ColumnCount;
         }
 
         private Matrix<double> B; // bias as matrix
@@ -43,6 +43,14 @@ namespace Mnist
             //nodes = new List<INode<double>>(nodesCount); // for non full-connected
             //for (int i = 0; i < nodesCount; i++)
             //    nodes.Add(new Node<double>(activation));
+        }
+
+        public void RandomMatrix(double center, double offset)
+        {
+            Random r = new Random();
+            for (int i = 0; i < matrix.ColumnCount; i++)
+                for (int j = 0; j < matrix.RowCount; j++)
+                    matrix[j, i] = (r.NextDouble() - 0.5) * offset * 2 + center;
         }
 
         private void SetUp(int size)
