@@ -25,6 +25,7 @@ namespace Mnist
             reverseLayers = new List<Layer>(deep);
             ReLU f1 = new ReLU();
             SoftMax f2 = new SoftMax(10);
+            Sigmoid f3 = new Sigmoid();
 
             if (deep < 2)
                 throw new Exception("Too few layers!");
@@ -36,7 +37,7 @@ namespace Mnist
             else if (deep == 3)
             {
                 layers.Add(new Layer(width, inputSize, init, b, f1));
-                layers.Add(new Layer(width, width, init, b, f1));
+                layers.Add(new Layer(width, width, init, b, f3));
                 layers.Add(new Layer(outputSize, width, init, b, f2));
             }
             else
@@ -63,15 +64,16 @@ namespace Mnist
         {
             layers = new List<Layer>(deep);
             reverseLayers = new List<Layer>(deep);
-            ReLU f1 = new ReLU(0.001);
+            ReLU f1 = new ReLU();
             SoftMax f2 = new SoftMax(10);
+            Sigmoid f3 = new Sigmoid();
 
             if (deep < 2)
                 throw new Exception("Too few layers!");
             else if (deep == 2)
             {
                 layers.Add(new Layer(width[0], inputSize, init[0], bias[0], f1));
-                layers.Add(new Layer(outputSize, width[0], init[1], bias[1], f2));
+                layers.Add(new Layer(outputSize, width[0], init[1], bias[1], f3));
             }
             else
             {
@@ -90,7 +92,7 @@ namespace Mnist
             //    }
 
             for (int i = 0; i < deep - 1; i++)
-                layers[i].RandomMatrix(1, 1);
+                layers[i].RandomMatrix(0, 1);
 
             for (int i = deep - 1; i >= 0; i--)
                 reverseLayers.Add(layers[i]);
@@ -135,6 +137,8 @@ namespace Mnist
                     //Console.WriteLine(signal.ToString());
                     signal = layers[k].forward(signal);
                 }
+                //Normalize(signal);
+                //signal = layers[layers.Count - 1].forward(signal);
 
                 if (i % _logEpoch == 0)
                 {
@@ -146,7 +150,7 @@ namespace Mnist
                 currentLossVector += v;
                 //Console.WriteLine($"Current loss-vector: \n{currentLossVector.ToString()}");
 
-                Matrix<double> error = loss.backPropagation(signal, answer);
+                Matrix<double> error = -loss.backPropagation(signal, answer);
                 //Console.WriteLine($"Current error: \n{error.ToString()}");
                 error = layers[layers.Count - 1].backPropagation(layers[layers.Count - 2].A.Transpose(), error, rate);
 
@@ -177,6 +181,19 @@ namespace Mnist
                     Console.WriteLine($"==================================================\n");
                 }
                 prevLoss = currentLoss;
+            }
+        }
+
+        private void Normalize(Matrix<double> m)
+        {
+            double max;
+            for (int i = 0; i < m.RowCount; i++)
+            {
+                max = m[i, 0];
+                for (int j = 0; j < m.ColumnCount; j++)
+                    max = max > m[i, j] ? max : m[i, j];
+                for (int j = 0; j < m.ColumnCount; j++)
+                    m[i, j] /= max;
             }
         }
 

@@ -31,10 +31,15 @@ namespace Mnist.Functions
         virtual public Matrix<double> call(Matrix<double> m)
         {
             List<Vector<double>> a = new List<Vector<double>>(m.RowCount);
+            Vector<double> c;
+            Matrix<double> mv;
             foreach (Vector<double> v in m.EnumerateRows())
-                a.Add(f(v));
-
-            return Matrix<double>.Build.DenseOfRowVectors(a);
+            {
+                c = f(v);
+                a.Add(c);
+            }
+            mv = Matrix<double>.Build.DenseOfRowVectors(a);
+            return mv;
         }
 
         virtual protected Vector<double> f(Vector<double> x)

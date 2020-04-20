@@ -13,49 +13,17 @@ namespace Mnist.Functions
     ?
     */
 
-    class L2LossFloat : ILossFunction<float>
+    class L2Loss : BaseLoss
     {
-        public Vector<float> backPropagation(Vector<float> calc, Vector<float> truly)
+        override public Vector<double> backPropagation(Vector<double> calc, Vector<double> truly)
         {
-            throw new NotImplementedException();
+            double l2norm = call(calc, truly);
+            return (calc - truly) / l2norm;
         }
 
-        public Matrix<float> backPropagation(Matrix<float> calc, Matrix<float> truly)
-        {
-            throw new NotImplementedException();
-        }
-
-        public float call(Vector<float> calc, Vector<float> truly)
-        {
-            return (float)(calc-truly).L2Norm();
-        }
-
-        public Vector<float> call(Matrix<float> calc, Matrix<float> truly)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    class L2LossDouble : ILossFunction<double>
-    {
-        public Vector<double> backPropagation(Vector<double> calc, Vector<double> truly)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Matrix<double> backPropagation(Matrix<double> calc, Matrix<double> truly)
-        {
-            throw new NotImplementedException();
-        }
-
-        public double call(Vector<double> calc, Vector<double> truly)
+        override public double call(Vector<double> calc, Vector<double> truly)
         {
             return (calc - truly).L2Norm();
-        }
-
-        public Vector<double> call(Matrix<double> calc, Matrix<double> truly)
-        {
-            throw new NotImplementedException();
         }
     }
 }
