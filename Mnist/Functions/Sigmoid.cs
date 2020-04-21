@@ -19,12 +19,12 @@ namespace Mnist.Functions
         {
         }
 
-        override protected Vector<double> f(Vector<double> x)
+        protected override Vector<double> f(Vector<double> x)
         {
-            return x.Map(e => e = 1/(1+Math.Exp(-e*k)));
+            return x.Map(e => 1/(1+Math.Exp(-e*k)));
         }
 
-        override protected Vector<double> df(Vector<double> x)
+        protected override Vector<double> df(Vector<double> x)
         {
             double y;
             return x.Map(e =>

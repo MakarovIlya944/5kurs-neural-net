@@ -7,15 +7,22 @@ using Microsoft.Extensions.Logging;
 
 namespace Mnist
 {
-    public class Model : IModel<double> 
+    public class Model : IModel<double>
     {
         public List<Layer> layers;
         private List<Layer> reverseLayers;
         public List<Matrix<double>> weights;
 
-        public int Deep { get => layers.Count; }
+        public int Deep
+        {
+            get => layers.Count;
+        }
 
-        public int LogEpoch { get => _logEpoch; set => _logEpoch = value; }
+        public int LogEpoch
+        {
+            get => _logEpoch;
+            set => _logEpoch = value;
+        }
 
         static private int _logEpoch = 5;
 
@@ -26,7 +33,6 @@ namespace Mnist
             ReLU f1 = new ReLU();
             SoftMax f2 = new SoftMax(10);
             Sigmoid f3 = new Sigmoid();
-
             if (deep < 2)
                 throw new Exception("Too few layers!");
             else if (deep == 2)
@@ -55,7 +61,6 @@ namespace Mnist
             //        Console.WriteLine(layer.matrix.ToString());
             //        Console.WriteLine(layer.bias.ToString());
             //    }
-
             for (int i = deep - 1; i >= 0; i--)
                 reverseLayers.Add(layers[i]);
         }
@@ -67,7 +72,6 @@ namespace Mnist
             ReLU f1 = new ReLU();
             SoftMax f2 = new SoftMax(10);
             Sigmoid f3 = new Sigmoid();
-
             if (deep < 2)
                 throw new Exception("Too few layers!");
             else if (deep == 2)
@@ -90,10 +94,8 @@ namespace Mnist
             //        Console.WriteLine(layer.matrix.ToString());
             //        Console.WriteLine(layer.bias.ToString());
             //    }
-
             for (int i = 0; i < deep - 1; i++)
                 layers[i].RandomMatrix(0, 1);
-
             for (int i = deep - 1; i >= 0; i--)
                 reverseLayers.Add(layers[i]);
         }
@@ -114,12 +116,9 @@ namespace Mnist
             Vector<double> currentLossVector = Vector<double>.Build.Dense(data.InputDataSize, 0);
             Matrix<double> signal;
             Matrix<double> answer = data.AllAnswer;
-
             int index;
-
             foreach (var layer in layers)
                 layer.InputDataSize = data.InputDataSize;
-
             for (int i = 0; i < epoch; i++)
             {
                 signal = data.AllSignal;
@@ -128,6 +127,7 @@ namespace Mnist
                     Console.WriteLine($"==================================================");
                     Console.WriteLine($"Epoch #{i}\n");
                 }
+
                 currentLossVector.Clear();
 
                 //Console.WriteLine("Forward signal through layers");
@@ -149,13 +149,11 @@ namespace Mnist
                 Vector<double> v = loss.call(signal, answer);
                 currentLossVector += v;
                 //Console.WriteLine($"Current loss-vector: \n{currentLossVector.ToString()}");
-
                 Matrix<double> error = -loss.backPropagation(signal, answer);
                 //Console.WriteLine($"Current error: \n{error.ToString()}");
                 error = layers[layers.Count - 1].backPropagation(layers[layers.Count - 2].A.Transpose(), error, rate);
 
                 //Console.WriteLine("Backward signal through layers");
-
                 for (int k = layers.Count - 2; k > 0; k--)
                 {
                     //Console.WriteLine($"#{k}");
@@ -163,7 +161,6 @@ namespace Mnist
                 }
 
                 layers[0].backPropagation(data.AllSignal.Transpose(), error * layers[1].matrix.Transpose(), rate);
-
                 currentLoss = currentLossVector.L2Norm();
                 maxLoss = (currentLoss < maxLoss) ? maxLoss : currentLoss;
 
@@ -174,12 +171,12 @@ namespace Mnist
                 //    Console.WriteLine($"Layer #{index}\nW:{layer.matrix}");
                 //}
                 //Console.WriteLine($"---------------------------------------------------");
-
                 if (i % _logEpoch == 0)
                 {
                     Console.WriteLine($"Previous loss: {prevLoss}\nCurrent loss: {currentLoss}\nMaxLoss: {maxLoss}");
                     Console.WriteLine($"==================================================\n");
                 }
+
                 prevLoss = currentLoss;
             }
         }

@@ -13,7 +13,7 @@ namespace Mnist.Functions
             this.dim = dim;
         }
 
-        override protected Vector<double> f(Vector<double> x)
+        protected override Vector<double> f(Vector<double> x)
         {
             double s;
             bool overflow = x.Exists(e => Math.Abs(e) > 709);
@@ -29,7 +29,7 @@ namespace Mnist.Functions
             }
         }
 
-        override protected Vector<double> df(Vector<double> x)
+        protected override Vector<double> df(Vector<double> x)
         {
             Vector<double> v = f(x);
             Matrix<double> dm = Matrix<double>.Build.Dense(dim, dim);

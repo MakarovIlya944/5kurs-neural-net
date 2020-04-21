@@ -9,21 +9,16 @@ namespace Mnist.Functions
 {
     class ScaleActivation : BaseActivation
     {
-
-        override protected Vector<double> f(Vector<double> x)
+        protected override Vector<double> f(Vector<double> x)
         {
-            double max = x[0];
-            foreach (double e in x)
-                max = Math.Max(max, e);
-            return x.Map(e => e = e > 0 ? e / max : 0);
+            double max = x.Maximum();
+            return x.Map(e => e > 0 ? e / max : 0);
         }
 
-        override protected Vector<double> df(Vector<double> x)
+        protected override Vector<double> df(Vector<double> x)
         {
-            double max = x[0];
-            foreach (double e in x)
-                max = Math.Max(max, e);
-            return x.Map(e => e = e > 0 ? 1 / max : 0);
+            double max = x.Maximum();
+            return x.Map(e => e > 0 ? 1 / max : 0);
         }
     }
 }

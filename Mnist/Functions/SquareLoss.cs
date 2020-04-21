@@ -28,14 +28,8 @@ namespace Mnist.Functions
 
         public Vector<double> call(Matrix<double> calc, Matrix<double> truly)
         {
-            var c = calc.EnumerateRows();
             var t = truly.EnumerateRows();
-            List<double> answer = new List<double>();
-
-            for (int i = 0, n = c.Count(); i < n; i++)
-                answer.Add((t.ElementAt(i) - c.ElementAt(i)).Map(x => x * x).Sum() / 2);
-
-            return Vector<double>.Build.DenseOfEnumerable(answer);
+            return Vector<double>.Build.DenseOfEnumerable(calc.EnumerateRows().Select((x, i) => (t.ElementAt(i) - x).Map(x => x * x).Sum() / 2));
         }
 
         public Matrix<double> backPropagation(Matrix<double> calc, Matrix<double> truly)
@@ -44,4 +38,3 @@ namespace Mnist.Functions
         }
     }
 }
- 

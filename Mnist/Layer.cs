@@ -93,7 +93,7 @@ namespace Mnist
         {
             Matrix<double> fz = activation.backPropagation(zMatrix);
             //Console.WriteLine($"f(Z): \n{fz.ToString()}");
-            Matrix<double> delta = input.Map2((x,y) => x*y*rate, fz);
+            Matrix<double> delta = input.Map2((x,y) => x*y*rate, fz); // мне кажется, где-то здесь ошибка
             //Console.WriteLine($"delta: \n{delta.ToString()}");
             //Console.WriteLine($"W: \n{matrix.ToString()}");
             matrix -= prevW * delta;

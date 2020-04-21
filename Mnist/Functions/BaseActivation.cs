@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.Optimization;
 
 namespace Mnist.Functions
 {
@@ -14,13 +11,9 @@ namespace Mnist.Functions
             return df(v);
         }
 
-        virtual public Matrix<double> backPropagation(Matrix<double> m)
+        public virtual Matrix<double> backPropagation(Matrix<double> m)
         {
-            List<Vector<double>> a = new List<Vector<double>>(m.RowCount);
-            foreach (Vector<double> v in m.EnumerateRows())
-                a.Add(df(v));
-
-            return Matrix<double>.Build.DenseOfRowVectors(a);
+            return Matrix<double>.Build.DenseOfRowVectors(m.EnumerateRows().Select(df));
         }
 
         public Vector<double> call(Vector<double> v)
@@ -28,26 +21,17 @@ namespace Mnist.Functions
             return f(v);
         }
 
-        virtual public Matrix<double> call(Matrix<double> m)
+        public virtual Matrix<double> call(Matrix<double> m)
         {
-            List<Vector<double>> a = new List<Vector<double>>(m.RowCount);
-            Vector<double> c;
-            Matrix<double> mv;
-            foreach (Vector<double> v in m.EnumerateRows())
-            {
-                c = f(v);
-                a.Add(c);
-            }
-            mv = Matrix<double>.Build.DenseOfRowVectors(a);
-            return mv;
+            return Matrix<double>.Build.DenseOfRowVectors(m.EnumerateRows().Select(f));
         }
 
-        virtual protected Vector<double> f(Vector<double> x)
+        protected virtual Vector<double> f(Vector<double> x)
         {
             throw new NotImplementedException();
         }
 
-        virtual protected Vector<double> df(Vector<double> x)
+        protected virtual Vector<double> df(Vector<double> x)
         {
             throw new NotImplementedException();
         }

@@ -9,7 +9,7 @@ namespace Mnist.Pictures
 {
     static public class MnistConverter
     {
-        static public void SavePicture(Data d, int i, string path = @"./image.bmp")
+        public static void SavePicture(Data d, int i, string path = @"./image.bmp")
         {
             var bitmap = new Bitmap(28, 28);
 
@@ -20,7 +20,7 @@ namespace Mnist.Pictures
             bitmap.Save(path);
         }
 
-        static public Data OpenMnist(string filenamelabel, string filenameimage, double percent = 1.0)
+        public static Data OpenMnist(string filenamelabel, string filenameimage, double percent = 1.0)
         {
             byte[] byteLabels = File.ReadAllBytes(filenamelabel), byteImages = File.ReadAllBytes(filenameimage);
 
@@ -44,7 +44,7 @@ namespace Mnist.Pictures
             int columns = BitConverter.ToInt32(byteImages.Skip(12).Take(4).Reverse().ToArray());
             int input = rows * columns;
 
-            v = Vector<double>.Build.Dense(input);
+            v = Vector<double>.Build.Dense(input); // TODO: это не используется, странно как-то
 
             for (int offset = 16, i = 0; i < len; offset += input, i++)
                 listImages.Add(Vector<double>.Build.DenseOfEnumerable(
