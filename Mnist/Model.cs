@@ -77,7 +77,7 @@ namespace Mnist
             else if (deep == 2)
             {
                 layers.Add(new Layer(width[0], inputSize, init[0], bias[0], f1));
-                layers.Add(new Layer(outputSize, width[0], init[1], bias[1], f3));
+                layers.Add(new Layer(outputSize, width[0], init[1], bias[1], f2));
             }
             else
             {
@@ -94,8 +94,10 @@ namespace Mnist
             //        Console.WriteLine(layer.matrix.ToString());
             //        Console.WriteLine(layer.bias.ToString());
             //    }
-            for (int i = 0; i < deep - 1; i++)
-                layers[i].RandomMatrix(0, 1);
+
+            //for (int i = 0; i < deep - 1; i++)
+            //    layers[i].RandomMatrix(0, 1);
+
             for (int i = deep - 1; i >= 0; i--)
                 reverseLayers.Add(layers[i]);
         }
@@ -116,19 +118,22 @@ namespace Mnist
             Vector<double> currentLossVector = Vector<double>.Build.Dense(data.InputDataSize, 0);
             Matrix<double> signal;
             Matrix<double> answer = data.AllAnswer;
-            int index;
+            Matrix<double>[] matrixStorage = new Matrix<double>[2];
+            int currentFreeMatrixStorage = 0;
+
             foreach (var layer in layers)
                 layer.InputDataSize = data.InputDataSize;
             for (int i = 0; i < epoch; i++)
             {
+                currentFreeMatrixStorage = 0;
                 signal = data.AllSignal;
+                currentLossVector.Clear();
+
                 if (i % _logEpoch == 0)
                 {
                     Console.WriteLine($"==================================================");
                     Console.WriteLine($"Epoch #{i}\n");
                 }
-
-                currentLossVector.Clear();
 
                 //Console.WriteLine("Forward signal through layers");
                 for (int k = 0, n = layers.Count; k < n; k++)
@@ -146,21 +151,28 @@ namespace Mnist
                     Console.WriteLine(signal.Transpose().ToString());
                 }
 
-                Vector<double> v = loss.call(signal, answer);
-                currentLossVector += v;
+                currentLossVector = loss.call(signal, answer);
                 //Console.WriteLine($"Current loss-vector: \n{currentLossVector.ToString()}");
-                Matrix<double> error = -loss.backPropagation(signal, answer);
-                //Console.WriteLine($"Current error: \n{error.ToString()}");
-                error = layers[layers.Count - 1].backPropagation(layers[layers.Count - 2].A.Transpose(), error, rate);
 
+                signal = loss.backPropagation(signal, answer);
+                //Console.WriteLine($"Current error: \n{error.ToString()}");
+                signal = layers[layers.Count - 1].backPropagation(layers[layers.Count - 2].A.Transpose(), signal, rate, out matrixStorage[currentFreeMatrixStorage]);
+                currentFreeMatrixStorage = 1;
                 //Console.WriteLine("Backward signal through layers");
                 for (int k = layers.Count - 2; k > 0; k--)
                 {
                     //Console.WriteLine($"#{k}");
-                    error = layers[k].backPropagation(layers[k - 1].A.Transpose(), error * layers[k + 1].matrix.Transpose(), rate);
+                    signal = layers[k].backPropagation(layers[k - 1].A.Transpose(), signal * layers[k + 1].matrix.Transpose(), rate, out matrixStorage[currentFreeMatrixStorage++]);
+                    currentFreeMatrixStorage %= 2;
+                    layers[k + 1].matrix -= matrixStorage[currentFreeMatrixStorage];
                 }
 
-                layers[0].backPropagation(data.AllSignal.Transpose(), error * layers[1].matrix.Transpose(), rate);
+                layers[0].backPropagation(data.AllSignal.Transpose(), signal * layers[1].matrix.Transpose(), rate, out matrixStorage[currentFreeMatrixStorage++]);
+                currentFreeMatrixStorage %= 2;
+                layers[1].matrix -= matrixStorage[currentFreeMatrixStorage++];
+                currentFreeMatrixStorage %= 2;
+                layers[0].matrix -= matrixStorage[currentFreeMatrixStorage];
+
                 currentLoss = currentLossVector.L2Norm();
                 maxLoss = (currentLoss < maxLoss) ? maxLoss : currentLoss;
 

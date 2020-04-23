@@ -10,6 +10,6 @@ namespace Mnist
         public Vector<T> forward(Vector<T> input);
         public Matrix<T> forward(Matrix<T> input);
         public Vector<T> backPropagation(Vector<T> input, double rate);
-        public Matrix<T> backPropagation(Matrix<T> prevW, Matrix<T> input, double rate);
+        public Matrix<T> backPropagation(Matrix<T> prevW, Matrix<T> input, double rate, out Matrix<T> derivative);
     }
 }

@@ -15,7 +15,7 @@ namespace Mnist.Functions
     {
         public override double call(Vector<double> calc, Vector<double> truly)
         {
-            return -(calc.Map2((x, y) => y * Math.Log(x), truly).Sum());
+            return -(calc.Map2((clac_x, calc_y) => clac_x * Math.Log(calc_y), truly).Sum());
         }
 
         public override Vector<double> backPropagation(Vector<double> calc, Vector<double> truly)

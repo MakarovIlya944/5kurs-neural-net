@@ -19,7 +19,12 @@ namespace Mnist.Functions
         {
         }
 
-        protected override Vector<double> f(Vector<double> x)
+        override public Matrix<double> backPropagation(Matrix<double> m)
+        {
+            return m.Map(v => v > 0 ? scale : 0.0);
+        }
+
+        override protected Vector<double> f(Vector<double> x)
         {
             return x.Map(e => Math.Max(0, e) * scale);
         }

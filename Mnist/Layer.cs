@@ -89,14 +89,14 @@ namespace Mnist
             throw new NotImplementedException();
         }
 
-        public Matrix<double> backPropagation(Matrix<double> prevW, Matrix<double> input, double rate)
+        public Matrix<double> backPropagation(Matrix<double> prevW, Matrix<double> prevDelta, double rate, out Matrix<double> derivative)
         {
             Matrix<double> fz = activation.backPropagation(zMatrix);
             //Console.WriteLine($"f(Z): \n{fz.ToString()}");
-            Matrix<double> delta = input.Map2((x,y) => x*y*rate, fz); // мне кажется, где-то здесь ошибка
+            Matrix<double> delta = prevDelta.Map2((x,y) => x*y*rate, fz); // мне кажется, где-то здесь ошибка
             //Console.WriteLine($"delta: \n{delta.ToString()}");
             //Console.WriteLine($"W: \n{matrix.ToString()}");
-            matrix -= prevW * delta;
+            derivative = prevW * delta;
             //Console.WriteLine($"W: \n{matrix.ToString()}");
             return delta;
         }
