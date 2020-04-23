@@ -19,14 +19,14 @@ namespace Mnist.Functions
         {
         }
 
-        override protected Vector<double> f(Vector<double> x)
+        protected override Vector<double> f(Vector<double> x)
         {
-            return x.Map(e => e = Math.Max(0, e) * scale);
+            return x.Map(e => Math.Max(0, e) * scale);
         }
 
-        override protected Vector<double> df(Vector<double> x)
+        protected override Vector<double> df(Vector<double> x)
         {
-            return x.Map(e => e = e > 0 ? scale : 0);
+            return x.Map(e =>  e > 0 ? scale : 0);
         }
     }
 }

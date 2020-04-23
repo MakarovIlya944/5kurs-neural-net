@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using MathNet.Numerics.LinearAlgebra;
 
 namespace Mnist.Functions
 {
     /*
     Loss fuction:
-    sum((y-x)^2)/2
+    -sum(x*log(y))
 
     Derivative:
     -(y-x)
@@ -16,12 +13,12 @@ namespace Mnist.Functions
 
     class LogLoss : BaseLoss
     {
-        override public double call(Vector<double> calc, Vector<double> truly)
+        public override double call(Vector<double> calc, Vector<double> truly)
         {
-            return -(calc.Map2((x, y) => x * Math.Log(y), truly).Sum());
+            return -(calc.Map2((x, y) => y * Math.Log(x), truly).Sum());
         }
 
-        override public Vector<double> backPropagation(Vector<double> calc, Vector<double> truly)
+        public override Vector<double> backPropagation(Vector<double> calc, Vector<double> truly)
         {
             return -(truly.PointwiseDivide(calc));
         }

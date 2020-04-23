@@ -54,37 +54,36 @@ namespace Mnist
 
         static void Train()
         {
-            //ILossFunction<double> loss = new L2Loss();
-            //Vector<double>[] input = new Vector<double>[4];
-            //input[0] = Vector<double>.Build.Dense(new double[2] { 0, 0 });
-            //input[1] = Vector<double>.Build.Dense(new double[2] { 0, 1 });
-            //input[2] = Vector<double>.Build.Dense(new double[2] { 1, 0 });
-            //input[3] = Vector<double>.Build.Dense(new double[2] { 1, 1 });
-
-            //Vector<double>[] output = new Vector<double>[4];
-            //output[0] = Vector<double>.Build.Dense(new double[1] { 0 });
-            //output[1] = Vector<double>.Build.Dense(new double[1] { 1 });
-            //output[2] = Vector<double>.Build.Dense(new double[1] { 1 });
-            //output[3] = Vector<double>.Build.Dense(new double[1] { 0 });
-
-            //int dataSize = 1;
-
-            //Data data = new Data(input.Take(dataSize).ToArray(), output.Take(dataSize).ToArray());
-
-            //int inputSize = 2, outputSize = 1, deep = 3, epoch = 5;
-            //int[] width = new int[2] { 4, 4 };
-            //double[] init = new double[3] { 1, 1, 1E-5 }, bias = new double[3] { 3, 3, 1 };
-            //double teachRate = 1E-2;
-
-            int numberInputData = 2;
-            double percentData = 0.000018 * numberInputData;
-            Data data = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", percentData);
-
-            int inputSize = 28 * 28, outputSize = 10, deep = 3, epoch = 5;
-            int[] width = new int[2] { inputSize / 2, inputSize / 4 };
-            double[] init = new double[3] { 1E-3, 1, 1E-10 }, bias = new double[3] { 1E-5, 1, 1E-10 };
-            double teachRate = 1E+0;
             ILossFunction<double> loss = new L2Loss();
+            Vector<double>[] input = new Vector<double>[4];
+            input[0] = Vector<double>.Build.Dense(new double[2] { 0, 0 });
+            input[1] = Vector<double>.Build.Dense(new double[2] { 0, 1 });
+            input[2] = Vector<double>.Build.Dense(new double[2] { 1, 0 });
+            input[3] = Vector<double>.Build.Dense(new double[2] { 1, 1 });
+
+            Vector<double>[] output = new Vector<double>[4];
+            output[0] = Vector<double>.Build.Dense(new double[1] { 0 });
+            output[1] = Vector<double>.Build.Dense(new double[1] { 1 });
+            output[2] = Vector<double>.Build.Dense(new double[1] { 1 });
+            output[3] = Vector<double>.Build.Dense(new double[1] { 0 });
+
+            int dataSize = 4;
+
+            Data data = new Data(input.Take(dataSize).ToArray(), output.Take(dataSize).ToArray());
+
+            int inputSize = 2, outputSize = 1, deep = 3, epoch = 5;
+            int[] width = new int[2] { 4, 4 };
+            double[] init = new double[3] { 1, 1, 1E-5 }, bias = new double[3] { 3, 3, 1 };
+            double teachRate = 1E-2;
+
+            //int numberInputData = 2;
+            //double percentData = 0.000018 * numberInputData;
+            //Data data = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", percentData);
+
+            //int inputSize = 28 * 28, outputSize = 10, deep = 3, epoch = 5;
+            //int[] width = new int[2] { inputSize / 2, inputSize / 4 };
+            //double[] init = new double[3] { 1E-3, 1, 1E-10 }, bias = new double[3] { 1E-5, 1, 1E-10 };
+            //double teachRate = 1E+0;
 
             Model m = new Model(deep, width, init, bias, inputSize, outputSize);
             m.LogEpoch = 1;
