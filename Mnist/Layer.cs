@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using MathNet.Numerics.LinearAlgebra;
 using System.Text;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Mnist.Functions;
 
 namespace Mnist
 {
@@ -76,13 +77,6 @@ namespace Mnist
             return aMatrix;
         }
 
-        /// <summary>
-        /// Calculate back propagation and change weights matrix
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="rate"></param>
-        /// <param name="layerNum">0 - input layer, 1 - hidden layer, 2 - output layer</param> TODO refactor
-        /// <returns></returns>
         public Vector<double> backPropagation(Vector<double> input, double rate)
         {
             //Matrix<double> ret;
@@ -98,6 +92,15 @@ namespace Mnist
             //Console.WriteLine($"W: \n{matrix.ToString()}");
             derivative = prevW * delta;
             //Console.WriteLine($"W: \n{matrix.ToString()}");
+            return delta;
+        }
+
+        public Matrix<double> backPropagation(Matrix<double> x, double rate, out Matrix<double> derivative)
+        {
+            // aMatrix - S
+            // input - x
+            Matrix<double> delta = aMatrix.MapIndexed((i, j, v) => j == ((SoftMax)activation).rightIndecies[i] ? v - 1 : v);
+            derivative = x.Transpose() * delta * rate;
             return delta;
         }
     }

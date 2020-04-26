@@ -95,8 +95,8 @@ namespace Mnist
             //        Console.WriteLine(layer.bias.ToString());
             //    }
 
-            //for (int i = 0; i < deep - 1; i++)
-            //    layers[i].RandomMatrix(0, 1);
+            for (int i = 0; i < deep - 1; i++)
+                layers[i].RandomMatrix(0, 1E-1);
 
             for (int i = deep - 1; i >= 0; i--)
                 reverseLayers.Add(layers[i]);
@@ -116,13 +116,17 @@ namespace Mnist
         {
             double maxLoss = -1, currentLoss, prevLoss = -1;
             Vector<double> currentLossVector = Vector<double>.Build.Dense(data.InputDataSize, 0);
-            Matrix<double> signal;
+            Matrix<double> signal, currentLossVectorString = Matrix<double>.Build.DenseOfRowVectors(currentLossVector);
             Matrix<double> answer = data.AllAnswer;
             Matrix<double>[] matrixStorage = new Matrix<double>[2];
             int currentFreeMatrixStorage = 0;
 
             foreach (var layer in layers)
                 layer.InputDataSize = data.InputDataSize;
+
+            if (layers[layers.Count - 1].activation.GetType() == typeof(SoftMax))
+                layers[layers.Count - 1].activation.SetAnswer(answer);
+
             for (int i = 0; i < epoch; i++)
             {
                 currentFreeMatrixStorage = 0;
@@ -149,14 +153,24 @@ namespace Mnist
                 {
                     //Console.WriteLine($"--------------------------------------#{layers.Count-1}--------------------------------\nSignal:");
                     Console.WriteLine(signal.Transpose().ToString());
+                    Console.WriteLine($"----------------------------------------------------------------------");
+                    Console.WriteLine(answer.Transpose().ToString());
                 }
 
-                currentLossVector = loss.call(signal, answer);
+                    currentLossVector = loss.call(signal, answer);
                 //Console.WriteLine($"Current loss-vector: \n{currentLossVector.ToString()}");
 
-                signal = loss.backPropagation(signal, answer);
-                //Console.WriteLine($"Current error: \n{error.ToString()}");
-                signal = layers[layers.Count - 1].backPropagation(layers[layers.Count - 2].A.Transpose(), signal, rate, out matrixStorage[currentFreeMatrixStorage]);
+
+                if (layers[layers.Count - 1].activation.GetType() == typeof(SoftMax))
+                {
+                    signal = layers[layers.Count - 1].backPropagation(layers[layers.Count - 2].A, rate, out matrixStorage[currentFreeMatrixStorage]);
+                }
+                else
+                {
+                    signal = loss.backPropagation(signal, answer);
+                    //Console.WriteLine($"Current error: \n{error.ToString()}");
+                    signal = layers[layers.Count - 1].backPropagation(layers[layers.Count - 2].A.Transpose(), signal, rate, out matrixStorage[currentFreeMatrixStorage]);
+                }
                 currentFreeMatrixStorage = 1;
                 //Console.WriteLine("Backward signal through layers");
                 for (int k = layers.Count - 2; k > 0; k--)
@@ -173,8 +187,6 @@ namespace Mnist
                 currentFreeMatrixStorage %= 2;
                 layers[0].matrix -= matrixStorage[currentFreeMatrixStorage];
 
-                currentLoss = currentLossVector.L2Norm();
-                maxLoss = (currentLoss < maxLoss) ? maxLoss : currentLoss;
 
                 //index = 0;
                 //    Console.WriteLine($"---------------------------------------------------");
@@ -185,24 +197,15 @@ namespace Mnist
                 //Console.WriteLine($"---------------------------------------------------");
                 if (i % _logEpoch == 0)
                 {
+                    currentLoss = currentLossVector.L2Norm();
+                    currentLossVectorString = Matrix<double>.Build.DenseOfRowVectors(currentLossVector);
+                    maxLoss = (currentLoss < maxLoss) ? maxLoss : currentLoss;
                     Console.WriteLine($"Previous loss: {prevLoss}\nCurrent loss: {currentLoss}\nMaxLoss: {maxLoss}");
+                    Console.WriteLine(currentLossVectorString.ToString());
                     Console.WriteLine($"==================================================\n");
+                    prevLoss = currentLoss;
                 }
 
-                prevLoss = currentLoss;
-            }
-        }
-
-        private void Normalize(Matrix<double> m)
-        {
-            double max;
-            for (int i = 0; i < m.RowCount; i++)
-            {
-                max = m[i, 0];
-                for (int j = 0; j < m.ColumnCount; j++)
-                    max = max > m[i, j] ? max : m[i, j];
-                for (int j = 0; j < m.ColumnCount; j++)
-                    m[i, j] /= max;
             }
         }
 

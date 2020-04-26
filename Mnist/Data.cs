@@ -26,5 +26,10 @@ namespace Mnist
             this.input = input;
             this.output = output;
         }
+
+        public Data this[int index]
+        {
+            get => new Data(new Vector<double>[1] { signal[index] }, new Vector<double>[1] { answer[index] });
+        }
     }
 }

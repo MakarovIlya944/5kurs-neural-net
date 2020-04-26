@@ -15,7 +15,11 @@ namespace Mnist.Functions
     {
         public override double call(Vector<double> calc, Vector<double> truly)
         {
-            return -(calc.Map2((clac_x, calc_y) => clac_x * Math.Log(calc_y), truly).Sum());
+            int trueClass = truly.Find(v => Math.Abs(v - 1) < 1E-15).Item1; // only for data with one 1 and all other 0
+            if (double.IsInfinity(Math.Log(calc[trueClass])))
+                return -1E+100;
+            else
+                return -Math.Log(calc[trueClass]);
         }
 
         public override Vector<double> backPropagation(Vector<double> calc, Vector<double> truly)

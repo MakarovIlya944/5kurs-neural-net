@@ -32,12 +32,12 @@ namespace Mnist.Pictures
             List<Vector<double>> listImages = new List<Vector<double>>(len);
             List<Vector<double>> listLabels = new List<Vector<double>>(len);
 
-            Vector<double> v = Vector<double>.Build.Dense(output, 1E-16);
+            Vector<double> v = Vector<double>.Build.Dense(output, 0);
             for (int offset = 8, i = 0; i < len; i++)
             {
                 v[byteLabels[offset++]] = 1;
                 listLabels.Add(v);
-                v = Vector<double>.Build.Dense(output, 1E-16);
+                v = Vector<double>.Build.Dense(output, 0);
             }
 
             int rows = BitConverter.ToInt32(byteImages.Skip(8).Take(4).Reverse().ToArray());

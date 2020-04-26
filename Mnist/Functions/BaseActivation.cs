@@ -6,6 +6,12 @@ namespace Mnist.Functions
 {
     public class BaseActivation : IActivationFunction<double> 
     {
+
+        public virtual void SetAnswer(Matrix<double> answer)
+        {
+            throw new NotImplementedException();
+        }
+
         public Vector<double> backPropagation(Vector<double> v)
         {
             return df(v);
