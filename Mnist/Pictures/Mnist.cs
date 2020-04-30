@@ -32,24 +32,22 @@ namespace Mnist.Pictures
             List<Vector<double>> listImages = new List<Vector<double>>(len);
             List<Vector<double>> listLabels = new List<Vector<double>>(len);
 
-            Vector<double> v = Vector<double>.Build.Dense(output, 0);
+            Vector<double> v = Vector<double>.Build.Dense(output, 1E-16);
             for (int offset = 8, i = 0; i < len; i++)
             {
                 v[byteLabels[offset++]] = 1;
                 listLabels.Add(v);
-                v = Vector<double>.Build.Dense(output, 0);
+                v = Vector<double>.Build.Dense(output, 1E-16);
             }
 
             int rows = BitConverter.ToInt32(byteImages.Skip(8).Take(4).Reverse().ToArray());
             int columns = BitConverter.ToInt32(byteImages.Skip(12).Take(4).Reverse().ToArray());
             int input = rows * columns;
 
-            v = Vector<double>.Build.Dense(input); // TODO: это не используется, странно как-то
-
             for (int offset = 16, i = 0; i < len; offset += input, i++)
                 listImages.Add(Vector<double>.Build.DenseOfEnumerable(
                     byteImages
-                    .Skip(i).Take(input)
+                    .Skip(offset).Take(input)
                     .Select(x => (double)(int)x)));
 
             return new Data(listImages.ToArray(), listLabels.ToArray());

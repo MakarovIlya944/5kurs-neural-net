@@ -1,7 +1,9 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.Optimization;
 using Mnist.Functions;
 using Mnist.Pictures;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Mnist
@@ -54,6 +56,11 @@ namespace Mnist
             int add = 4;
         }
 
+        static void ConfigProgram(string filename)
+        {
+
+        }
+
         static void Train()
         {
             //ILossFunction<double> loss = new L2Loss();
@@ -78,19 +85,35 @@ namespace Mnist
             //double[] init = new double[4] { 1, 1, 1, 1 }, bias = new double[4] { -1, 5, -9, 1 };
             //double teachRate = 1E-3;
 
-            int numberInputData = 5000;
-            double percentData = 0.000018 * numberInputData;
-            Data data = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", percentData);
 
-            int inputSize = 28 * 28, outputSize = 10, deep = 5, epoch = 500;
-            int[] width = new int[4] { inputSize / 2, inputSize / 4, inputSize / 8, inputSize / 16 };
-            double[] init = new double[5] { 1, 1, 1, 1, 1 }, bias = new double[5] { 1, 1, 1, 1, 1 };
-            double teachRate = 1E-5;
+            /*
+             WORK
+            int inputSize = 28 * 28, outputSize = 10, deep = 5, epoch = 10, batch = 10;
+            List<int> width = new List<int>() { inputSize, inputSize / 2, inputSize / 4, inputSize / 8 };
+            //double[] init = new double[5] { 1, 1, 1, 1, 1 }, bias = new double[5] { 1, 1, 1, 1, 1 };
+            double teachRate = 5;
             ILossFunction<double> loss = new LogLoss();
 
-            Model m = new Model(deep, width, init, bias, inputSize, outputSize);
-            m.LogEpoch = 50;
-            m.train(data, epoch, teachRate, loss);
+            Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, 1E+1);
+            ReLU f1 = new ReLU(1E-3);
+             */
+
+            int numberInputData = 10000;
+            double percentData = 0.1;// 0.000018 * numberInputData;
+            Data data = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", percentData);
+
+            int inputSize = 28 * 28, outputSize = 10, deep = 5, epoch = 10, batch = 10;
+            List<int> width = new List<int>() { inputSize, inputSize / 2, inputSize / 4, inputSize / 8 };
+            //double[] init = new double[5] { 1, 1, 1, 1, 1 }, bias = new double[5] { 1, 1, 1, 1, 1 };
+            double teachRate = 5;
+            ILossFunction<double> loss = new LogLoss();
+
+            Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, 1E+1);
+            m.Save(@"D:\Projects\Mnist\NeuralNet\Ready\Models\Model1");
+            
+            m.LogEpoch = 2;
+
+            m.train(data, epoch, batch, teachRate, loss);
         }
     }
 }

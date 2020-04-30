@@ -7,9 +7,9 @@ namespace Mnist
 {
     public interface IModel<T> where T : struct, IEquatable<T>, IFormattable
     {
-        public void save(string filename);
-        public void load(string filename);
-        public void train(Data data, int epochs, T rate, ILossFunction<T> loss);
-        public Vector<T> predict(Data data);
+        public void Save(string filename);
+        public void Load(string filename);
+        public void Train(Data data, int epochs, int batch, T rate, ILossFunction<T> loss);
+        public Vector<T> Predict(Data data);
     }
 }

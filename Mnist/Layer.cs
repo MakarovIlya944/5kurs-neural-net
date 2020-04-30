@@ -4,6 +4,7 @@ using MathNet.Numerics.LinearAlgebra;
 using System.Text;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Mnist.Functions;
+using System.Linq;
 
 namespace Mnist
 {
@@ -52,6 +53,13 @@ namespace Mnist
             for (int i = 0; i < matrix.ColumnCount; i++)
                 for (int j = 0; j < matrix.RowCount; j++)
                     matrix[j, i] = (r.NextDouble() - 0.5) * offset * 2 + center;
+        }
+
+        public void RandomBias(double center, double offset)
+        {
+            Random r = new Random();
+            for (int i = 0; i < bias.Count; i++)
+                bias[i] = (r.NextDouble() - 0.5) * offset * 2 + center;
         }
 
         private void SetUp(int size)

@@ -1,4 +1,5 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
+using System.Linq;
 
 namespace Mnist
 {
@@ -30,6 +31,16 @@ namespace Mnist
         public Data this[int index]
         {
             get => new Data(new Vector<double>[1] { signal[index] }, new Vector<double>[1] { answer[index] });
+        }
+
+        public Matrix<double> Signal(int offset, int length)
+        {
+            return Matrix<double>.Build.DenseOfRowVectors(signal.Skip(offset).Take(length));
+        }
+
+        public Matrix<double> Answer(int offset, int length)
+        {
+            return Matrix<double>.Build.DenseOfRowVectors(answer.Skip(offset).Take(length));
         }
     }
 }
