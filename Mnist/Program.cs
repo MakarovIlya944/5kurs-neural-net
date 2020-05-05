@@ -13,6 +13,9 @@ namespace Mnist
     {
         private static Logger logger = LogManager.GetLogger("console");
 
+        static Data allData = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", 1);
+        static string modelPath = @"D:\Projects\Mnist\NeuralNet\Ready\Models\Model1";
+
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World! Version 3\n");
@@ -73,10 +76,8 @@ namespace Mnist
         static void Predict()
         {
             Model m = new Model();
-            m.Load(@"D:\Projects\Mnist\NeuralNet\Ready\Models\Model1");
-            double percentData = 1;// 0.000018 * numberInputData;
-            Data data = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", percentData)
-                .Skip(50000);
+            m.Load(modelPath);
+            Data data = allData.Skip(50000);
             foreach (var item in m.layers)
             {
                 item.InputDataSize = data.InputDataSize;
@@ -149,7 +150,7 @@ namespace Mnist
 
             int numberInputData = 10000;
             double percentData = 1;// 0.000018 * numberInputData;
-            Data data = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", percentData).Take(50000);
+            Data data = allData.Take(50000);
 
             int inputSize = 28 * 28, outputSize = 10, deep = 5, epoch = 10, batch = 100;
             List<int> width = new List<int>() { inputSize, inputSize / 2, inputSize / 4, inputSize / 8 };
@@ -162,7 +163,7 @@ namespace Mnist
             m.LogEpoch = 2;
 
             m.Train(data, epoch, batch, teachRate, loss);
-            m.Save(@"D:\Projects\Mnist\NeuralNet\Ready\Models\Model1");
+            m.Save(modelPath);
         }
     }
 }
