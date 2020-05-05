@@ -8,12 +8,14 @@ using Mnist.Fabrics;
 using System.Reflection.Metadata;
 using System.IO;
 using System.Linq;
+using NLog;
 
 namespace Mnist
 {
     public class Model : IModel<double>
     {
         public List<Layer> layers;
+        private static Logger loggerPredict = LogManager.GetLogger("predict"), loggerTrain = LogManager.GetLogger("train"), logger = LogManager.GetLogger("console");
 
         public int Deep
         {
@@ -27,6 +29,11 @@ namespace Mnist
         }
 
         static private int _logEpoch = 5;
+
+        public Model()
+        {
+            layers = new List<Layer>();
+        }
 
         public Model(int deep, int[] width, double init, double b, int inputSize = 2, int outputSize = 1, bool randomize = false, double offset = 1E-1)
         {
@@ -66,16 +73,17 @@ namespace Mnist
         {
             string filename;
             string[] func;
+            int inputSize, width;
             IActivationFunction<double> f;
-            Matrix<double> W, B;
+            Matrix<double> W;
+            Vector<double> B;
             int i = 0;
             while (true)
             {
-                filename = Path.Combine(path, $"layer_{i++}.txt");
                 try
                 {
-                    using (StreamReader file =
-                               new StreamReader(filename))
+                    filename = Path.Combine(path, $"layer_{i}_f.txt");
+                    using (StreamReader file = new StreamReader(filename))
                     {
                         func = file.ReadLine().Split(' ');
                         switch (func[1])
@@ -87,24 +95,37 @@ namespace Mnist
                                 f = new ReLU(Double.Parse(func[2]));
                                 break;
                             case "Sigmoid":
-                                throw new Exception();
+                                f = new Sigmoid(Double.Parse(func[2]));
                                 break;
                             default:
                                 throw new Exception();
                                 break;
                         }
+                    }
+                    filename = Path.Combine(path, $"layer_{i}_w.txt");
+                    using (StreamReader file = new StreamReader(filename))
+                    {
                         file.ReadLine();
                         W = Matrix<double>.Build.DenseOfRowVectors(
-                            file.ReadToEnd().Split('\n').Select(
-                                x => Vector<double>.Build.DenseOfArray(x.Split(' ').Select(s => Double.Parse(s)).ToArray())
-                                ).ToArray()
+                            file.ReadToEnd().Split('\n').Where(x => x != "").Select(
+                                x => Vector<double>.Build.DenseOfArray(x.Split(' ').Where(x => x != "").Select(s => Double.Parse(s)).ToArray()))
+                            .ToArray()
                             );
                     }
+                    filename = Path.Combine(path, $"layer_{i}_b.txt");
+                    using (StreamReader file = new StreamReader(filename))
+                    {
+                        file.ReadLine();
+                        B = Vector<double>.Build.DenseOfArray(
+                            file.ReadToEnd().Split('\n').Where(x => x != "").Select(x => Double.Parse(x)).ToArray());
+                    }
+                    layers.Add(new Layer(W, B, f));
                 }
-                catch (Exception)
+                catch (FileNotFoundException ex)
                 {
                     break;
                 }
+                i++;
             }
         }
 
@@ -114,14 +135,23 @@ namespace Mnist
             int maxRows, maxColumns;
             for (int i = 0; i < layers.Count; i++)
             {
-                filename= Path.Combine(path, $"layer_{i}.txt");
-                using (StreamWriter file =
-                            new StreamWriter(filename))
+                filename = Path.Combine(path, $"layer_{i}_f.txt");
+                using (StreamWriter file = new StreamWriter(filename))
                 {
-                    file.WriteLine("Name: " + layers[i].activation.GetType().ToString().Split('.').Last());
+                    file.WriteLine("Name: " + layers[i].activation.ToString());
+                }
+                filename = Path.Combine(path, $"layer_{i}_w.txt");
+                using (StreamWriter file = new StreamWriter(filename))
+                {
                     maxColumns = layers[i].matrix.ColumnCount;
                     maxRows = layers[i].matrix.RowCount;
                     file.Write(layers[i].matrix.ToString(maxRows, maxColumns));
+                }
+                filename = Path.Combine(path, $"layer_{i}_b.txt");
+                using (StreamWriter file = new StreamWriter(filename))
+                {
+                    maxColumns = layers[i].bias.Count;
+                    file.Write(layers[i].bias.ToString(maxColumns, 15));
                 }
             }
         }
@@ -174,65 +204,70 @@ namespace Mnist
             foreach (var layer in layers)
                 layer.InputDataSize = batch;
 
-            using (StreamWriter file =
-                        new StreamWriter(@"D:\Projects\Mnist\NeuralNet\Mnist\logs.txt"))
+            for (int i = 0; i < epoch; i++)
             {
-                for (int i = 0; i < epoch; i++)
+                currentLossVector.Clear();
+                //if (i % _logEpoch == 0)
+                //{
+                //    Console.WriteLine($"==================================================");
+                //}
+                logger.Error("----------------------------------------------------------------------");
+                loggerTrain.Info($"Epoch #{i}/{epoch}");
+                logger.Info($"Epoch #{i}/{epoch}");
+                for (int j = 0; j < data.input; j += batch)
                 {
-                    currentLossVector.Clear();
-                    //if (i % _logEpoch == 0)
-                    //{
-                    //    Console.WriteLine($"==================================================");
-                    //}
-                    Console.WriteLine($"Epoch #{i}/{epoch}\n");
-                    file.WriteLine($"Epoch #{i}/{epoch}");
-                    for (int j = 0; j < data.input; j += batch)
+                    loggerTrain.Info($"Batch #{j}/{data.input}");
+                    logger.Info($"Batch #{j}/{data.input}");
+
+                    answer = data.Answer(j, batch);
+
+                    signal = forward(data.Signal(j, batch));
+
+                    currentLossVector = loss.call(signal, answer);
+                    if (layers[layers.Count - 1].activation.GetType() == typeof(SoftMax))
+                        layers[layers.Count - 1].activation.SetAnswer(answer);
+
+                    backPropagation(signal, answer, data.Signal(j, batch), rate, loss);
+
+                    currentLoss = currentLossVector.L2Norm();
+                    currentLossVectorString = Matrix<double>.Build.DenseOfRowVectors(currentLossVector);
+                    if (currentLoss < maxLoss)
                     {
-                        Console.WriteLine($"Batch #{j}/{data.input}\n");
-                        file.WriteLine($"Batch #{j}/{data.input}");
-
-                        answer = data.Answer(j, batch);
-
-                        signal = forward(data.Signal(j, batch));
-
-                        currentLossVector = loss.call(signal, answer);
-                        if (layers[layers.Count - 1].activation.GetType() == typeof(SoftMax))
-                            layers[layers.Count - 1].activation.SetAnswer(answer);
-
-                        backPropagation(signal, answer, data.Signal(j, batch), rate, loss);
-
-                        currentLoss = currentLossVector.L2Norm();
-                        currentLossVectorString = Matrix<double>.Build.DenseOfRowVectors(currentLossVector);
-                        maxLoss = (currentLoss < maxLoss) ? maxLoss : currentLoss;
-                        file.WriteLine($"Previous loss: {prevLoss}\nCurrent loss: {currentLoss}\nMaxLoss: {maxLoss}");
-                        //Console.WriteLine($"Previous loss: {prevLoss}\nCurrent loss: {currentLoss}\nMaxLoss: {maxLoss}");
-                        //Console.WriteLine(currentLossVectorString.ToString());
-                        prevLoss = currentLoss;
-
-                        //Console.WriteLine($"----------------------------------------------------------------------\nCalculated:");
-                        //Console.WriteLine(forward(data.Signal(j, batch)).Transpose().ToString());
-                        //Console.WriteLine($"Truly");
-                        //Console.WriteLine(answer.Transpose().ToString());
-                        //Console.WriteLine($"----------------------------------------------------------------------");
+                        logger.Info($"Previous loss: {prevLoss}");
+                        logger.Info($"Current loss: {currentLoss}");
+                        logger.Info($"MaxLoss: {maxLoss}");
                     }
-                    //if (i % _logEpoch == 0)
-                    //{
-                    //    foreach (var layer in layers)
-                    //        layer.InputDataSize = data.input;
-                    //    Console.WriteLine(forward(data.AllSignal).Transpose().ToString());
-                    //    Console.WriteLine($"----------------------------------------------------------------------");
-                    //    Console.WriteLine(data.AllAnswer.Transpose().ToString());
-                    //    foreach (var layer in layers)
-                    //        layer.InputDataSize = batch;
-                    //}
-                    //Console.WriteLine($"==================================================\n");
+                    else
+                    {
+                        maxLoss = currentLoss;
+                        logger.Error($"Previous loss: {prevLoss}");
+                        logger.Error($"Current loss: {currentLoss}");
+                        logger.Error($"MaxLoss: {maxLoss}");
+                        logger.Error(currentLossVectorString.ToString());
+                    }
+                    loggerTrain.Info($"Previous loss: {prevLoss}");
+                    loggerTrain.Info($"Current loss: {currentLoss}");
+                    loggerTrain.Info($"MaxLoss: {maxLoss}");
+
+                    prevLoss = currentLoss;
+                }
+                if (i % _logEpoch == 0)
+                {
+                    foreach (var layer in layers)
+                        layer.InputDataSize = data.input;
+                    logger.Fatal(Vector<double>.Build.Dense((forward(data.AllSignal) - data.AllAnswer).EnumerateRows().Select(x => x.L2Norm()).ToArray()).ToString());
+                    foreach (var layer in layers)
+                        layer.InputDataSize = batch;
                 }
             }
+            logger.Error("----------------------------------------------------------------------");
         }
+        
 
-        public Vector<double> Predict(Data data)
+        public Matrix<double> Predict(Data data)
         {
-            throw new NotImplementedException();
+            return forward(data.AllSignal);
+            
         }
     }
 }

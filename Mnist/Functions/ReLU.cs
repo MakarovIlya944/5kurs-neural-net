@@ -33,5 +33,10 @@ namespace Mnist.Functions
         {
             return x.Map(e =>  e > 0 ? scale : 0);
         }
+
+        override public string ToString()
+        {
+            return base.ToString() + $" {scale}";
+        }
     }
 }

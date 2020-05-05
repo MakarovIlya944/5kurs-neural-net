@@ -33,6 +33,16 @@ namespace Mnist
             get => new Data(new Vector<double>[1] { signal[index] }, new Vector<double>[1] { answer[index] });
         }
 
+        public Data Take(int i)
+        {
+            return new Data(signal.Take(i).ToArray(), answer.Take(i).ToArray());
+        }
+
+        public Data Skip(int i)
+        {
+            return new Data(signal.Skip(i).ToArray(), answer.Skip(i).ToArray());
+        }
+
         public Matrix<double> Signal(int offset, int length)
         {
             return Matrix<double>.Build.DenseOfRowVectors(signal.Skip(offset).Take(length));

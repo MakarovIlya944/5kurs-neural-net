@@ -41,5 +41,10 @@ namespace Mnist.Functions
         {
             throw new NotImplementedException();
         }
+
+        override public string ToString()
+        {
+            return GetType().ToString().Split('.').Last();
+        }
     }
 }

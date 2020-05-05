@@ -2,6 +2,7 @@
 using MathNet.Numerics.Optimization;
 using Mnist.Functions;
 using Mnist.Pictures;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +11,14 @@ namespace Mnist
 {
     class Program
     {
+        private static Logger logger = LogManager.GetLogger("console");
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!\n");
+            Console.WriteLine("Hello World! Version 3\n");
             //Test();
             Train();
+            //Predict();
             Console.WriteLine("Good bye World!");
             Console.ReadLine();
         }
@@ -56,9 +60,54 @@ namespace Mnist
             int add = 4;
         }
 
-        static void ConfigProgram(string filename)
+        static int PredictedIndex(Vector<double> v)
         {
+            double max = v[0];
+            int a = 0;
+            v.MapIndexed((i, x) => {
+                if (max < x) { a = i; max = x; }; 
+                return x; });
+            return a;
+        }
 
+        static void Predict()
+        {
+            Model m = new Model();
+            m.Load(@"D:\Projects\Mnist\NeuralNet\Ready\Models\Model1");
+            double percentData = 1;// 0.000018 * numberInputData;
+            Data data = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", percentData)
+                .Skip(50000);
+            foreach (var item in m.layers)
+            {
+                item.InputDataSize = data.InputDataSize;
+            }
+            Matrix<double> pred = m.Predict(data), ans = data.AllAnswer;
+            Vector<double> l2error = Vector<double>.Build.Dense((pred - ans).EnumerateRows().Select(x => x.L2Norm()).ToArray());
+
+            logger.Error("Train:");
+            logger.Error($"L2 errors: {l2error.ToString()}");
+            logger.Error($"Max error: {l2error.Max()}:");
+
+            int[] right = new int[10], falsive = new int[10];
+            int a, b;
+            for (int i = 0; i < pred.RowCount; i++)
+            {
+                a = PredictedIndex(ans.Row(i));
+                b = PredictedIndex(pred.Row(i));
+                if (a == b) right[a]++;
+                else falsive[a]++;
+            }
+            logger.Error("i:       \ttrue/false\ttrue/all\tfalse/all\ttrue/false");
+            double truly, falsly, trfa, all;
+            for (int i = 0; i < 10; i++)
+            {
+                all = right[i] + falsive[i];
+                truly = right[i] / all;
+                falsly = falsive[i] / all;
+                trfa = right[i] / (double)falsive[i];
+                logger.Error(
+                    String.Format("{0}: {1:00}/{2:00}\t{3:0.00}%\t{4:0.00}%\t{5:0.00}", i, right[i], falsive[i], truly*100, falsly * 100, trfa));
+            }
         }
 
         static void Train()
@@ -99,21 +148,21 @@ namespace Mnist
              */
 
             int numberInputData = 10000;
-            double percentData = 0.1;// 0.000018 * numberInputData;
-            Data data = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", percentData);
+            double percentData = 1;// 0.000018 * numberInputData;
+            Data data = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", percentData).Take(50000);
 
-            int inputSize = 28 * 28, outputSize = 10, deep = 5, epoch = 10, batch = 10;
+            int inputSize = 28 * 28, outputSize = 10, deep = 5, epoch = 10, batch = 100;
             List<int> width = new List<int>() { inputSize, inputSize / 2, inputSize / 4, inputSize / 8 };
             //double[] init = new double[5] { 1, 1, 1, 1, 1 }, bias = new double[5] { 1, 1, 1, 1, 1 };
             double teachRate = 5;
             ILossFunction<double> loss = new LogLoss();
 
             Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, 1E+1);
-            m.Save(@"D:\Projects\Mnist\NeuralNet\Ready\Models\Model1");
-            
+
             m.LogEpoch = 2;
 
-            m.train(data, epoch, batch, teachRate, loss);
+            m.Train(data, epoch, batch, teachRate, loss);
+            m.Save(@"D:\Projects\Mnist\NeuralNet\Ready\Models\Model1");
         }
     }
 }

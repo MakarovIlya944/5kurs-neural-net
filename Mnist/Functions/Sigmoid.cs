@@ -33,5 +33,10 @@ namespace Mnist.Functions
                 return y / ((1 + y)* (1 + y));
             });
         }
+
+        override public string ToString()
+        {
+            return base.ToString() + $" {k}";
+        }
     }
 }

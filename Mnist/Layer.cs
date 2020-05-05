@@ -47,6 +47,18 @@ namespace Mnist
             //    nodes.Add(new Node<double>(activation));
         }
 
+        public Layer(Matrix<double> m, Vector<double> b, IActivationFunction<double> activation)
+        {
+            width = b.Count;
+            this.activation = activation;
+            matrix = m;
+            bias = b;
+
+            //nodes = new List<INode<double>>(nodesCount); // for non full-connected
+            //for (int i = 0; i < nodesCount; i++)
+            //    nodes.Add(new Node<double>(activation));
+        }
+
         public void RandomMatrix(double center, double offset)
         {
             Random r = new Random();

@@ -43,5 +43,10 @@ namespace Mnist.Functions
             double sIndexed = shifted[sIndex];
             return shifted.MapIndexed((i, v) => i == sIndex ? (1 - v) * sIndexed : -v * sIndexed);
         }
+
+        override public string ToString()
+        {
+            return base.ToString() + $" {dim}";
+        }
     }
 }
