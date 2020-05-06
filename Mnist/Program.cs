@@ -9,61 +9,31 @@ using System.Linq;
 
 namespace Mnist
 {
-    class Program
+    public class Program
     {
         private static Logger logger = LogManager.GetLogger("console");
 
-        static Data allData = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", 1);
-        static string modelPath = @"D:\Projects\Mnist\NeuralNet\Ready\Models\Model1";
+        public static Data allData = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", 1);
+        public static string modelPath = @"D:\Projects\Mnist\NeuralNet\Ready\Models\Model2";
+        public static int trainDataSize = 50000;
+        public static int trainEpoch = 15;
+        public static int trainBatch = 10;
+        public static double trainTeachRate = 5;
+        public static double trainMatrixRandomCenter = 0;
+        public static double trainMatrixRandomOffset = 1E+1;
+        public static double trainReLUCoef = 1;
+
 
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World! Version 3\n");
-            //Test();
-            Train();
-            //Predict();
+            //Train();
+            Predict();
             Console.WriteLine("Good bye World!");
             Console.ReadLine();
         }
 
-        static void Test()
-        {
-            Vector<double> a = Vector<double>.Build.Dense(new double[2] { Math.Exp(1), Math.Exp(-1) });
-            Vector<double> b = Vector<double>.Build.Dense(new double[2] { 6, 2 });
-            Vector<double> c = Vector<double>.Build.Dense(new double[2] { 1, 1 });
-
-
-            c = a.Map2((x, y) => y * Math.Log(x), b);
-
-            ReLU f = new ReLU();
-            Matrix<double> m = Matrix<double>.Build.DenseOfRowVectors(new Vector<double>[3] { a, b, c });
-            Console.WriteLine(m.ToMatrixString());
-            m = f.call(m);
-            Console.WriteLine(m.ToMatrixString());
-
-            Vector<double> calc = Vector<double>.Build.Dense(new double[2] { 1, 1 });
-            Vector<double> truly = Vector<double>.Build.Dense(new double[2] { 0, 1 });
-
-            Vector<double> dv = calc.Map2((x, y) => x * Math.Log(y), truly);
-
-            double d = dv.Sum();
-
-            Vector<double>[] input = new Vector<double>[4];
-            input[0] = Vector<double>.Build.Dense(new double[2] { 0, 0 });
-            input[1] = Vector<double>.Build.Dense(new double[2] { 0, 1 });
-            input[2] = Vector<double>.Build.Dense(new double[2] { 1, 0 });
-            input[3] = Vector<double>.Build.Dense(new double[2] { 1, 1 });
-
-            Vector<double>[] output = new Vector<double>[4];
-            output[0] = Vector<double>.Build.Dense(new double[1] { 0 });
-            output[1] = Vector<double>.Build.Dense(new double[1] { 1 });
-            output[2] = Vector<double>.Build.Dense(new double[1] { 1 });
-            output[3] = Vector<double>.Build.Dense(new double[1] { 0 });
-
-            int add = 4;
-        }
-
-        static int PredictedIndex(Vector<double> v)
+        public static int PredictedIndex(Vector<double> v)
         {
             double max = v[0];
             int a = 0;
@@ -73,11 +43,11 @@ namespace Mnist
             return a;
         }
 
-        static void Predict()
+        public static void Predict()
         {
             Model m = new Model();
             m.Load(modelPath);
-            Data data = allData.Skip(50000);
+            Data data = allData.Skip(trainDataSize);
             foreach (var item in m.layers)
             {
                 item.InputDataSize = data.InputDataSize;
@@ -98,7 +68,7 @@ namespace Mnist
                 if (a == b) right[a]++;
                 else falsive[a]++;
             }
-            logger.Error("i:       \ttrue/false\ttrue/all\tfalse/all\ttrue/false");
+            logger.Error("i:\ttrue/false\t\ttrue/all\t\tfalse/all\t\ttrue/false");
             double truly, falsly, trfa, all;
             for (int i = 0; i < 10; i++)
             {
@@ -107,62 +77,37 @@ namespace Mnist
                 falsly = falsive[i] / all;
                 trfa = right[i] / (double)falsive[i];
                 logger.Error(
-                    String.Format("{0}: {1:00}/{2:00}\t{3:0.00}%\t{4:0.00}%\t{5:0.00}", i, right[i], falsive[i], truly*100, falsly * 100, trfa));
+                    String.Format("{0}: {1:00}/{2:00}\t\t{3:0.00}%\t\t{4:0.00}%\t\t{5:0.00}", i, right[i], falsive[i], truly*100, falsly * 100, trfa));
             }
         }
 
-        static void Train()
+        public static Vector<double> Predict(byte[] image)
         {
-            //ILossFunction<double> loss = new L2Loss();
-            //Vector<double>[] input = new Vector<double>[4];
-            //input[0] = Vector<double>.Build.Dense(new double[2] { 0, 0 });
-            //input[1] = Vector<double>.Build.Dense(new double[2] { 0, 1 });
-            //input[2] = Vector<double>.Build.Dense(new double[2] { 1, 0 });
-            //input[3] = Vector<double>.Build.Dense(new double[2] { 1, 1 });
+            Model m = new Model();
+            m.Load(modelPath);
+            Data data = new Data(new Vector<double>[1] { Vector<double>.Build.DenseOfArray(image.Select(x => 255.0-(double)(int)x).ToArray()) }, new Vector<double>[0]);
+            MnistConverter.SavePicture(data, 0);
+            foreach (var item in m.layers)
+            {
+                item.InputDataSize = data.InputDataSize;
+            }
+            return m.Predict(data).Row(0);
+        }
 
-            //Vector<double>[] output = new Vector<double>[4];
-            //output[0] = Vector<double>.Build.Dense(new double[1] { 0 });
-            //output[1] = Vector<double>.Build.Dense(new double[1] { 1 });
-            //output[2] = Vector<double>.Build.Dense(new double[1] { 1 });
-            //output[3] = Vector<double>.Build.Dense(new double[1] { 0 });
+        public static void Train()
+        {
+            Data data = allData.Take(trainDataSize);
 
-            //int dataSize = 4;
-
-            //Data data = new Data(input.Take(dataSize).ToArray(), output.Take(dataSize).ToArray());
-
-            //int inputSize = 2, outputSize = 1, deep = 4, epoch = 50;
-            //int[] width = new int[3] { 3, 7, 11 };
-            //double[] init = new double[4] { 1, 1, 1, 1 }, bias = new double[4] { -1, 5, -9, 1 };
-            //double teachRate = 1E-3;
-
-
-            /*
-             WORK
-            int inputSize = 28 * 28, outputSize = 10, deep = 5, epoch = 10, batch = 10;
+            int inputSize = 28 * 28, outputSize = 10, deep = 5;
             List<int> width = new List<int>() { inputSize, inputSize / 2, inputSize / 4, inputSize / 8 };
             //double[] init = new double[5] { 1, 1, 1, 1, 1 }, bias = new double[5] { 1, 1, 1, 1, 1 };
-            double teachRate = 5;
             ILossFunction<double> loss = new LogLoss();
 
-            Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, 1E+1);
-            ReLU f1 = new ReLU(1E-3);
-             */
-
-            int numberInputData = 10000;
-            double percentData = 1;// 0.000018 * numberInputData;
-            Data data = allData.Take(50000);
-
-            int inputSize = 28 * 28, outputSize = 10, deep = 5, epoch = 10, batch = 100;
-            List<int> width = new List<int>() { inputSize, inputSize / 2, inputSize / 4, inputSize / 8 };
-            //double[] init = new double[5] { 1, 1, 1, 1, 1 }, bias = new double[5] { 1, 1, 1, 1, 1 };
-            double teachRate = 5;
-            ILossFunction<double> loss = new LogLoss();
-
-            Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, 1E+1);
+            Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, trainMatrixRandomCenter, trainMatrixRandomOffset, trainReLUCoef);
 
             m.LogEpoch = 2;
 
-            m.Train(data, epoch, batch, teachRate, loss);
+            m.Train(data, trainEpoch, trainBatch, trainTeachRate, loss);
             m.Save(modelPath);
         }
     }

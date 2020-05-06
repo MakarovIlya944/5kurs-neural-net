@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.Win32;
 
 namespace PainterForMnist
 {
@@ -24,6 +25,8 @@ namespace PainterForMnist
     /// </summary>
     public partial class MainWindow : Window
     {
+        private static string modelPath = @"";
+
         public MainWindow()
         {
             InitializeComponent();
@@ -71,7 +74,7 @@ namespace PainterForMnist
             var size = new Size(surface.Width, surface.Height);
             surface.Measure(size);
             surface.Arrange(new Rect(size));
-            var renderBitmap = new RenderTargetBitmap(78, 78, 96d, 96d, PixelFormats.Pbgra32);
+            var renderBitmap = new RenderTargetBitmap(28, 28, 96d, 96d, PixelFormats.Pbgra32);
             var visual = new DrawingVisual();
             using (var context = visual.RenderOpen())
             {
@@ -81,7 +84,7 @@ namespace PainterForMnist
                                       new Rect(new Point(), new Size(surface.Width, surface.Height)));
             }
 
-            visual.Transform = new ScaleTransform(78 / surface.ActualWidth, 78 / surface.ActualHeight);
+            visual.Transform = new ScaleTransform(28 / surface.ActualWidth, 28 / surface.ActualHeight);
             renderBitmap.Render(visual);
             var bitmapGreyscale = new FormatConvertedBitmap(renderBitmap, PixelFormats.Gray8, BitmapPalettes.Gray256, 0.0);
             surface.LayoutTransform = transform;
@@ -131,11 +134,25 @@ namespace PainterForMnist
             };
         }
 
-        private async void MakePredictButton_Click(object sender, RoutedEventArgs e)
+        private void MakePredictButton_Click(object sender, RoutedEventArgs e)
         {
             var byteArray = GetImageLikeByteArray(PaintCanvas); //For predict
+            var pred = Mnist.Program.Predict(byteArray);
+            ResultOfPredict.Text = Mnist.Program.PredictedIndex(pred).ToString();//network output
+        }
+
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
             SaveToFilePng(new Uri(Directory.GetCurrentDirectory() + "/file1.png"), PaintCanvas);
-            ResultOfPredict.Text = "SomeText";//network output
+        }
+
+        private void TrainButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ChooseFolderButton_Click(object sender, RoutedEventArgs e)
+        {
         }
     }
 }
