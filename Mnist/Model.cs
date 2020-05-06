@@ -35,13 +35,10 @@ namespace Mnist
             layers = new List<Layer>();
         }
 
-        public Model(int deep, int[] width, double init, double b, int inputSize = 2, int outputSize = 1, bool randomize = false, double offset = 1E-1)
+        public Model(int deep, int[] width, double init, double b, int inputSize = 2, int outputSize = 1, bool randomize = false, double center = 0, double offset = 1E-1, double reluCoef = 1E-1)
         {
-            double center = 0;
-            ReLU f1 = new ReLU(1E-3);
-            ReLU f1Flatted = new ReLU(1.0 / inputSize);
+            ReLU f1 = new ReLU(reluCoef);
             SoftMax f2 = new SoftMax(outputSize);
-            Sigmoid f3 = new Sigmoid();
             if (randomize)
                 layers = LayerBuilder.BuildRandom(inputSize, outputSize, width, deep, mOffset: offset, mCenter: center, hidden: f1, input: f1, output: f2);
             else
