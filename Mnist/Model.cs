@@ -214,11 +214,11 @@ namespace Mnist
                 //}
                 logger.Error("----------------------------------------------------------------------");
                 loggerTrain.Info($"Epoch #{i}/{epoch}");
-                logger.Info($"Epoch #{i}/{epoch}");
+                logger.Fatal($"Epoch #{i}/{epoch}");
                 for (int j = 0; j < data.input; j += batch)
                 {
                     loggerTrain.Info($"Batch #{j}/{data.input}");
-                    logger.Info($"Batch #{j}/{data.input}");
+                    logger.Fatal($"Batch #{j}/{data.input}");
 
                     answer = data.Answer(j, batch);
 
