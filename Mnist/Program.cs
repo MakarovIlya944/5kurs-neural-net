@@ -5,6 +5,7 @@ using Mnist.Pictures;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Mnist
@@ -14,23 +15,88 @@ namespace Mnist
         private static Logger logger = LogManager.GetLogger("console");
 
         public static Data allData = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", 1);
-        public static string modelPath = @"D:\Projects\Mnist\NeuralNet\Ready\Models\Model2";
-        public static int trainDataSize = 50000;
-        public static int trainEpoch = 15;
-        public static int trainBatch = 10;
-        public static double trainTeachRate = 5;
+        public static Data allPredictData = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\t10k-labels.idx1-ubyte", @"D:\Projects\Mnist\data\t10k-images.idx3-ubyte", 1);
+        public static string modelPath = @"D:\Projects\Mnist\NeuralNet\Ready\Models";
+        public static int trainDataSize = 60000;
+        public static List<int> width;
+        public static int trainEpoch = 6;
+        public static int trainBatch = 128;
+        public static double trainTeachRate = 1;
         public static double trainMatrixRandomCenter = 0;
-        public static double trainMatrixRandomOffset = 1E+1;
+        public static double trainMatrixRandomOffset = 1E+0;
         public static double trainReLUCoef = 1;
+        public static double trainSigmoidCoef = 0.95;
 
 
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World! Version 3\n");
+            TrainManyModels(modelPath);
             //Train();
-            Predict();
+            //Predict();
             Console.WriteLine("Good bye World!");
             Console.ReadLine();
+        }
+
+        public static void TrainManyModels(string basePath)
+        {
+            int inputSize = 28 * 28;
+            string path = basePath;
+            List<int>[] widths =
+            {
+                new List<int>() { },
+                new List<int>() { inputSize },
+                new List<int>() { inputSize, inputSize / 2 },
+                new List<int>() { inputSize, inputSize / 2, inputSize / 4 }
+            };
+            path = Path.Combine(basePath, $"0_len_hidden");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            for (int i = 0; i < widths.Length; i++)
+            {
+                modelPath = Path.Combine(path, $"model_{i}");
+                width = widths[i];
+                Train();
+            }
+
+            widths = new List<int>[3]
+            {
+                new List<int>() { inputSize / 2, inputSize / 4},
+                new List<int>() { inputSize, inputSize / 2 },
+                new List<int>() { inputSize * 2, inputSize }
+            };
+            path = Path.Combine(basePath, $"1_capacity_hidden");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            for (int i = 0; i < widths.Length; i++)
+            {
+                modelPath = Path.Combine(path, $"model_{i}");
+                Train();
+            }
+
+            path = Path.Combine(basePath, $"2_size_batch");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            width = widths[0];
+            int[] batches = new int[3] { trainBatch / 2, trainBatch, trainBatch * 2 };
+            for (int i = 0; i < batches.Length; i++)
+            {
+                modelPath = Path.Combine(path, $"model_{i}");
+                trainBatch = batches[i];
+                Train();
+            }
+
+            trainBatch /= 2;
+            path = Path.Combine(basePath, $"3_size_batch");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            int[] epoches = new int[3] { 6, 12, 24 };
+            for (int i = 0; i < epoches.Length; i++)
+            {
+                modelPath = Path.Combine(path, $"model_{i}");
+                trainEpoch = epoches[i];
+                Train();
+            }
         }
 
         public static int PredictedIndex(Vector<double> v)
@@ -47,7 +113,7 @@ namespace Mnist
         {
             Model m = new Model();
             m.Load(modelPath);
-            Data data = allData.Skip(trainDataSize);
+            Data data = allPredictData;
             foreach (var item in m.layers)
             {
                 item.InputDataSize = data.InputDataSize;
@@ -98,12 +164,13 @@ namespace Mnist
         {
             Data data = allData.Take(trainDataSize);
 
-            int inputSize = 28 * 28, outputSize = 10, deep = 5;
-            List<int> width = new List<int>() { inputSize, inputSize / 2, inputSize / 4, inputSize / 8 };
+            int inputSize = 28 * 28, outputSize = 10, deep;
+
+            deep = width.Count + 1;
             //double[] init = new double[5] { 1, 1, 1, 1, 1 }, bias = new double[5] { 1, 1, 1, 1, 1 };
             ILossFunction<double> loss = new LogLoss();
 
-            Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, trainMatrixRandomCenter, trainMatrixRandomOffset, trainReLUCoef);
+            Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, trainMatrixRandomCenter, trainMatrixRandomOffset, trainReLUCoef, trainSigmoidCoef);
 
             m.LogEpoch = 2;
 

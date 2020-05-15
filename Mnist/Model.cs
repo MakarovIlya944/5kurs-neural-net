@@ -15,7 +15,7 @@ namespace Mnist
     public class Model : IModel<double>
     {
         public List<Layer> layers;
-        private static Logger loggerPredict = LogManager.GetLogger("predict"), loggerTrain = LogManager.GetLogger("train"), logger = LogManager.GetLogger("console");
+        public static Logger loggerPredict = LogManager.GetLogger("predict"), loggerTrain = LogManager.GetLogger("train"), logger = LogManager.GetLogger("console");
 
         public int Deep
         {
@@ -35,14 +35,15 @@ namespace Mnist
             layers = new List<Layer>();
         }
 
-        public Model(int deep, int[] width, double init, double b, int inputSize = 2, int outputSize = 1, bool randomize = false, double center = 0, double offset = 1E-1, double reluCoef = 1E-1)
+        public Model(int deep, int[] width, double init, double b, int inputSize = 2, int outputSize = 1, bool randomize = false, double center = 0, double offset = 1E-1, double reluCoef = 1E-1, double sigmoidCoef = 1E-1)
         {
-            ReLU f1 = new ReLU(reluCoef);
-            SoftMax f2 = new SoftMax(outputSize);
+            Sigmoid f1 = new Sigmoid(sigmoidCoef);
+            ReLU f2 = new ReLU(reluCoef);
+            SoftMax f3 = new SoftMax(outputSize);
             if (randomize)
-                layers = LayerBuilder.BuildRandom(inputSize, outputSize, width, deep, mOffset: offset, mCenter: center, hidden: f1, input: f1, output: f2);
+                layers = LayerBuilder.BuildRandom(inputSize, outputSize, width, deep, mOffset: offset, mCenter: center, hidden: f2, input: f1, output: f3);
             else
-                layers = LayerBuilder.BuildDense(inputSize, outputSize, width, deep, init, b, hidden: f1, input: f1, output: f2);
+                layers = LayerBuilder.BuildDense(inputSize, outputSize, width, deep, init, b, hidden: f2, input: f1, output: f3);
         }
 
         public Model(int deep, int[] width, double[] init, double[] bias, int inputSize = 2, int outputSize = 1, bool randomize = false, double offset = 1E-1)
@@ -130,6 +131,9 @@ namespace Mnist
         {
             string filename;
             int maxRows, maxColumns;
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
             for (int i = 0; i < layers.Count; i++)
             {
                 filename = Path.Combine(path, $"layer_{i}_f.txt");
