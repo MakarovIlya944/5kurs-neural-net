@@ -55,19 +55,19 @@ namespace Mnist.Fabrics
                 throw new Exception("Too few layers!");
             else if (deep == 1)
             {
-                layers.Add(BuildRandom(outputSize, inputSize, hidden, mCenter, mOffset, bCenter, bOffset));
+                layers.Add(BuildRandom(inputSize, outputSize, output, mCenter, mOffset, bCenter, bOffset));
             }
             else
             {
-                layers.Add(BuildRandom(hiddenSize, inputSize, input, mCenter, mOffset, bCenter, bOffset));
+                layers.Add(BuildRandom(inputSize, hiddenSize, input, mCenter, mOffset, bCenter, bOffset));
                 for (int i = 1; i < deep - 1; i++)
                     layers.Add(BuildRandom(hiddenSize, hiddenSize, hidden, mCenter, mOffset, bCenter, bOffset));
-                layers.Add(BuildRandom(outputSize, hiddenSize, output, mCenter, mOffset, bCenter, bOffset));
+                layers.Add(BuildRandom(hiddenSize, outputSize, output, mCenter, mOffset, bCenter, bOffset));
             }
             return layers;
         }
 
-        static public List<Layer> BuildDense(int inputSize, int outputSize, int[] hiddenSize, int deep, double matrixInit, double biasInit, IActivationFunction<double> hidden, IActivationFunction<double> input = null, IActivationFunction<double> output = null)
+        static public List<Layer> BuildDense(int inputSize, int outputSize, int[] hiddenSize, int deep, double[] matrixInit, double[] biasInit, IActivationFunction<double> hidden, IActivationFunction<double> input = null, IActivationFunction<double> output = null)
         {
             List<Layer> layers = new List<Layer>(deep);
 
@@ -78,14 +78,14 @@ namespace Mnist.Fabrics
                 throw new Exception("Too few layers!");
             else if (deep == 1)
             {
-                layers.Add(new Layer(inputSize, outputSize, matrixInit, biasInit, hidden));
+                layers.Add(new Layer(inputSize, outputSize, matrixInit[0], biasInit[0], hidden));
             }
             else
             {
-                layers.Add(new Layer(hiddenSize[0], inputSize, matrixInit, biasInit, input));
+                layers.Add(new Layer(hiddenSize[0], inputSize, matrixInit[0], biasInit[0], input));
                 for (int i = 1; i < deep - 1; i++)
-                    layers.Add(new Layer(hiddenSize[i], hiddenSize[i-1], matrixInit, biasInit, hidden));
-                layers.Add(new Layer(outputSize, hiddenSize[deep - 2], matrixInit, biasInit, output));
+                    layers.Add(new Layer(hiddenSize[i], hiddenSize[i-1], matrixInit[i], biasInit[i], hidden));
+                layers.Add(new Layer(outputSize, hiddenSize[deep - 2], matrixInit[deep - 1], biasInit[deep - 1], output));
             }
             return layers;
         }
@@ -102,7 +102,7 @@ namespace Mnist.Fabrics
                 throw new Exception("Too few layers!");
             else if (deep == 1)
             {
-                layers.Add(BuildRandom(outputSize, inputSize, hidden, mCenter, mOffset, bCenter, bOffset));
+                layers.Add(BuildRandom(inputSize, outputSize, hidden, mCenter, mOffset, bCenter, bOffset));
             }
             else
             {

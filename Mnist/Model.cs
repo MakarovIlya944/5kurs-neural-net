@@ -28,7 +28,13 @@ namespace Mnist
             set => _logEpoch = value;
         }
 
-        static private int _logEpoch = 5;
+        public int LogBatch
+        {
+            get => _logBatch;
+            set => _logBatch = value;
+        }
+
+        static private int _logEpoch = 5, _logBatch = 50;
 
         public Model()
         {
@@ -42,29 +48,19 @@ namespace Mnist
             SoftMax f3 = new SoftMax(outputSize);
             if (randomize)
                 layers = LayerBuilder.BuildRandom(inputSize, outputSize, width, deep, mOffset: offset, mCenter: center, hidden: f2, input: f1, output: f3);
-            else
-                layers = LayerBuilder.BuildDense(inputSize, outputSize, width, deep, init, b, hidden: f2, input: f1, output: f3);
+            //else
+            //    layers = LayerBuilder.BuildDense(inputSize, outputSize, width, deep, );
         }
 
-        public Model(int deep, int[] width, double[] init, double[] bias, int inputSize = 2, int outputSize = 1, bool randomize = false, double offset = 1E-1)
+        public Model(int deep, int[] width, double[] init, double[] bias, int inputSize = 2, int outputSize = 1, bool randomize = false, double center = 0, double offset = 1E-1, double reluCoef = 1E-1, double sigmoidCoef = 1E-1)
         {
-            layers = new List<Layer>(deep);
-            ReLU f1 = new ReLU(1E-2);
-            SoftMax f2 = new SoftMax(10);
-            Sigmoid f3 = new Sigmoid();
-            if (deep < 2)
-                throw new Exception("Too few layers!");
-            else
-            {
-                layers.Add(new Layer(width[0], inputSize, init[0], bias[0], f1));
-                for (int i = 1; i < deep - 1; i++)
-                    layers.Add(new Layer(width[i], width[i - 1], init[i], bias[i], f1));
-                layers.Add(new Layer(outputSize, width[deep - 2], init[deep - 1], bias[deep - 1], f2));
-            }
-
+            Sigmoid f1 = new Sigmoid(sigmoidCoef);
+            ReLU f2 = new ReLU(reluCoef);
+            SoftMax f3 = new SoftMax(outputSize);
             if (randomize)
-                for (int i = 0; i < deep - 1; i++)
-                    layers[i].RandomMatrix(0, offset);
+                layers = LayerBuilder.BuildRandom(inputSize, outputSize, width, deep, mOffset: offset, mCenter: center, hidden: f2, input: f1, output: f3);
+            else
+                layers = LayerBuilder.BuildDense(inputSize, outputSize, width, deep, init, bias, hidden: f2, input: f1, output: f3);
         }
 
         public void Load(string path)
@@ -232,20 +228,32 @@ namespace Mnist
 
                     currentLoss = currentLossVector.L2Norm();
                     currentLossVectorString = Matrix<double>.Build.DenseOfRowVectors(currentLossVector);
-                    if (currentLoss < maxLoss)
-                    {
-                        logger.Info($"Previous loss: {prevLoss}");
-                        logger.Info($"Current loss: {currentLoss}");
-                        logger.Info($"MaxLoss: {maxLoss}");
-                    }
-                    else
-                    {
+                    if (currentLoss > maxLoss)
                         maxLoss = currentLoss;
-                        logger.Error($"Previous loss: {prevLoss}");
-                        logger.Error($"Current loss: {currentLoss}");
-                        logger.Error($"MaxLoss: {maxLoss}");
-                        logger.Error(currentLossVectorString.ToString());
-                    }
+
+                    if (j % (_logBatch * batch) == 0)
+                        if (currentLoss > maxLoss)
+                        {
+                            logger.Fatal($"Previous loss: {prevLoss}");
+                            logger.Fatal($"Current loss: {currentLoss}");
+                            logger.Fatal($"MaxLoss: {maxLoss}");
+                            logger.Fatal(currentLossVectorString.ToString());
+                        }
+                        else if(currentLoss > prevLoss)
+                        {
+                            logger.Error($"Previous loss: {prevLoss}");
+                            logger.Error($"Current loss: {currentLoss}");
+                            logger.Error($"MaxLoss: {maxLoss}");
+                            logger.Error(currentLossVectorString.ToString());
+                        }
+                        else
+                        {
+                            logger.Info($"Previous loss: {prevLoss}");
+                            logger.Info($"Current loss: {currentLoss}");
+                            logger.Info($"MaxLoss: {maxLoss}");
+                        }
+
+
                     loggerTrain.Info($"Previous loss: {prevLoss}");
                     loggerTrain.Info($"Current loss: {currentLoss}");
                     loggerTrain.Info($"MaxLoss: {maxLoss}");

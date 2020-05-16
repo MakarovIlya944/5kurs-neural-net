@@ -14,19 +14,18 @@ namespace Mnist
     {
         private static Logger logger = LogManager.GetLogger("console");
 
-        public static Data allData = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\train-labels.idx1-ubyte", @"D:\Projects\Mnist\data\train-images.idx3-ubyte", 1);
-        public static Data allPredictData = MnistConverter.OpenMnist(@"D:\Projects\Mnist\data\t10k-labels.idx1-ubyte", @"D:\Projects\Mnist\data\t10k-images.idx3-ubyte", 1);
-        public static string modelPath = @"D:\Projects\Mnist\NeuralNet\Ready\Models";
+        public static Data allData = MnistConverter.OpenMnist(@"C:\Users\i.makarov.2015\Desktop\mnist\data\train-labels.idx1-ubyte", @"C:\Users\i.makarov.2015\Desktop\mnist\data\train-images.idx3-ubyte", 1);
+        public static Data allPredictData = MnistConverter.OpenMnist(@"C:\Users\i.makarov.2015\Desktop\mnist\data\t10k-labels.idx1-ubyte", @"C:\Users\i.makarov.2015\Desktop\mnist\data\t10k-images.idx3-ubyte", 1);
+        public static string modelPath = @"C:\Users\i.makarov.2015\Desktop\mnist\ready";
         public static int trainDataSize = 60000;
         public static List<int> width;
         public static int trainEpoch = 6;
-        public static int trainBatch = 128;
-        public static double trainTeachRate = 1;
+        public static int trainBatch = 120;
+        public static double trainTeachRate = 1E-3;
         public static double trainMatrixRandomCenter = 0;
-        public static double trainMatrixRandomOffset = 1E+0;
+        public static double trainMatrixRandomOffset = 1E-3;
         public static double trainReLUCoef = 1;
-        public static double trainSigmoidCoef = 0.95;
-
+        public static double trainSigmoidCoef = 0.01;
 
         static void Main(string[] args)
         {
@@ -42,9 +41,11 @@ namespace Mnist
         {
             int inputSize = 28 * 28;
             string path = basePath;
+            List<double> times = new List<double>();
+
+
             List<int>[] widths =
             {
-                new List<int>() { },
                 new List<int>() { inputSize },
                 new List<int>() { inputSize, inputSize / 2 },
                 new List<int>() { inputSize, inputSize / 2, inputSize / 4 }
@@ -56,7 +57,18 @@ namespace Mnist
             {
                 modelPath = Path.Combine(path, $"model_{i}");
                 width = widths[i];
-                Train();
+                times.Add(Train());
+            }
+
+            using (System.IO.StreamWriter file =
+            new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
+            {
+                int i = 0;
+                foreach (var t in times)
+                {
+                    file.Write( $"train model_{i}: {t}ms" );
+                }
+                times.Clear();
             }
 
             widths = new List<int>[3]
@@ -71,7 +83,18 @@ namespace Mnist
             for (int i = 0; i < widths.Length; i++)
             {
                 modelPath = Path.Combine(path, $"model_{i}");
-                Train();
+                times.Add(Train());
+            }
+
+            using (System.IO.StreamWriter file =
+new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
+            {
+                int i = 0;
+                foreach (var t in times)
+                {
+                    file.Write($"train model_{i}: {t}ms");
+                }
+                times.Clear();
             }
 
             path = Path.Combine(basePath, $"2_size_batch");
@@ -83,7 +106,18 @@ namespace Mnist
             {
                 modelPath = Path.Combine(path, $"model_{i}");
                 trainBatch = batches[i];
-                Train();
+                times.Add(Train());
+            }
+
+            using (System.IO.StreamWriter file =
+new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
+            {
+                int i = 0;
+                foreach (var t in times)
+                {
+                    file.Write($"train model_{i}: {t}ms");
+                }
+                times.Clear();
             }
 
             trainBatch /= 2;
@@ -95,7 +129,18 @@ namespace Mnist
             {
                 modelPath = Path.Combine(path, $"model_{i}");
                 trainEpoch = epoches[i];
-                Train();
+                times.Add(Train());
+            }
+
+            using (System.IO.StreamWriter file =
+new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
+            {
+                int i = 0;
+                foreach (var t in times)
+                {
+                    file.Write($"train model_{i}: {t}ms");
+                }
+                times.Clear();
             }
         }
 
@@ -160,8 +205,9 @@ namespace Mnist
             return m.Predict(data).Row(0);
         }
 
-        public static void Train()
+        public static double Train()
         {
+            var startTime = System.Diagnostics.Stopwatch.StartNew();
             Data data = allData.Take(trainDataSize);
 
             int inputSize = 28 * 28, outputSize = 10, deep;
@@ -172,10 +218,12 @@ namespace Mnist
 
             Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, trainMatrixRandomCenter, trainMatrixRandomOffset, trainReLUCoef, trainSigmoidCoef);
 
-            m.LogEpoch = 2;
+            m.LogEpoch = 3;
 
             m.Train(data, trainEpoch, trainBatch, trainTeachRate, loss);
             m.Save(modelPath);
+            startTime.Stop();
+            return startTime.ElapsedMilliseconds;
         }
     }
 }
