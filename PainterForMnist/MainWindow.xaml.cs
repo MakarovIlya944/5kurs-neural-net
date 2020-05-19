@@ -153,6 +153,7 @@ namespace PainterForMnist
 
         private void ChooseFolderButton_Click(object sender, RoutedEventArgs e)
         {
+            Mnist.Program.modelPath = TextModelFolder.Text;
         }
     }
 }

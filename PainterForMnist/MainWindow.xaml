@@ -59,7 +59,7 @@
             <StackPanel  Margin="5" Background="White">
                 <Label Content="Train" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 <Button Content="Choose model folder" Click="ChooseFolderButton_Click"/>
-                <TextBox Text="TextBox" TextWrapping="Wrap" Width="120"/>
+                <TextBox Text="Text path here" TextWrapping="Wrap" Width="120" Name="TextModelFolder" />
                 <StackPanel  Margin="5" Background="White">
                 <Label Content="Epoch" Width="118" Height="26" />
                     <TextBox Text="15" TextWrapping="Wrap" Width="120"/>
