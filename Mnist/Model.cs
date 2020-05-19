@@ -47,7 +47,7 @@ namespace Mnist
             ReLU f2 = new ReLU(reluCoef);
             SoftMax f3 = new SoftMax(outputSize);
             if (randomize)
-                layers = LayerBuilder.BuildRandom(inputSize, outputSize, width, deep, mOffset: offset, mCenter: center, hidden: f2, input: f1, output: f3);
+                layers = LayerBuilder.BuildRandom(inputSize, outputSize, width, deep, mOffset: offset, mCenter: center, hidden: f2, input: f2, output: f3);
             //else
             //    layers = LayerBuilder.BuildDense(inputSize, outputSize, width, deep, );
         }
@@ -58,9 +58,9 @@ namespace Mnist
             ReLU f2 = new ReLU(reluCoef);
             SoftMax f3 = new SoftMax(outputSize);
             if (randomize)
-                layers = LayerBuilder.BuildRandom(inputSize, outputSize, width, deep, mOffset: offset, mCenter: center, hidden: f2, input: f1, output: f3);
+                layers = LayerBuilder.BuildRandom(inputSize, outputSize, width, deep, mOffset: offset, mCenter: center, hidden: f2, input: f2, output: f3);
             else
-                layers = LayerBuilder.BuildDense(inputSize, outputSize, width, deep, init, bias, hidden: f2, input: f1, output: f3);
+                layers = LayerBuilder.BuildDense(inputSize, outputSize, width, deep, init, bias, hidden: f2, input: f2, output: f3);
         }
 
         public void Load(string path)
@@ -204,10 +204,6 @@ namespace Mnist
             for (int i = 0; i < epoch; i++)
             {
                 currentLossVector.Clear();
-                //if (i % _logEpoch == 0)
-                //{
-                //    Console.WriteLine($"==================================================");
-                //}
                 logger.Error("----------------------------------------------------------------------");
                 loggerTrain.Info($"Epoch #{i}/{epoch}");
                 logger.Fatal($"Epoch #{i}/{epoch}");

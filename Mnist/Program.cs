@@ -14,9 +14,10 @@ namespace Mnist
     {
         private static Logger logger = LogManager.GetLogger("console");
 
-        public static Data allData = MnistConverter.OpenMnist(@"C:\Users\i.makarov.2015\Desktop\mnist\data\train-labels.idx1-ubyte", @"C:\Users\i.makarov.2015\Desktop\mnist\data\train-images.idx3-ubyte", 1);
-        public static Data allPredictData = MnistConverter.OpenMnist(@"C:\Users\i.makarov.2015\Desktop\mnist\data\t10k-labels.idx1-ubyte", @"C:\Users\i.makarov.2015\Desktop\mnist\data\t10k-images.idx3-ubyte", 1);
-        public static string modelPath = @"C:\Users\i.makarov.2015\Desktop\mnist\ready";
+        public static string basePath = @"D:\Projects\Mnist\";
+        public static Data allData = MnistConverter.OpenMnist( Path.Combine(basePath, @"data\train-labels.idx1-ubyte"), Path.Combine(basePath, @"data\train-images.idx3-ubyte"), 1);
+        public static Data allPredictData = MnistConverter.OpenMnist(Path.Combine(basePath, @"data\t10k-labels.idx1-ubyte"), Path.Combine(basePath, @"data\t10k-images.idx3-ubyte"), 1);
+        public static string modelPath = Path.Combine(basePath, @"ready");
         public static int trainDataSize = 60000;
         public static List<int> width;
         public static int trainEpoch = 6;
@@ -25,16 +26,79 @@ namespace Mnist
         public static double trainMatrixRandomCenter = 0;
         public static double trainMatrixRandomOffset = 1E-3;
         public static double trainReLUCoef = 1;
-        public static double trainSigmoidCoef = 0.01;
+        public static double trainSigmoidCoef = 1;
+        public static int logEpoch = 3, logBatch = 5;
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World! Version 3\n");
-            TrainManyModels(modelPath);
+            Console.WriteLine("Hello World! Version 5\n");
+            //int inputSize = 784;
+            //width = new List<int>() { inputSize, inputSize / 2 };
+            //modelPath = Path.Combine(basePath, @"ready\newModel");
             //Train();
             //Predict();
+            //TrainManyModels(modelPath);
+            PredictManyModels(@"D:\Projects\Mnist\NeuralNet\Ready\Models");
+            //modelPath = @"D:\Projects\Mnist\NeuralNet\Ready\Models\0_len_hidden\model_2";
             Console.WriteLine("Good bye World!");
             Console.ReadLine();
+        }
+
+        private static void SavePredict(List<int[]> res, string path)
+        {
+            double all, truly, falsly, trfa;
+            using (StreamWriter file =
+new StreamWriter(Path.Combine(path, $"predict.txt")))
+            {
+                file.WriteLine("#: t/f\t\tt%\t\tf%\t\tt/f");
+                for (int j = 0; j < 10; j++)
+                {
+                    all = res[0][j] + res[1][j];
+                    truly = res[0][j] / all;
+                    falsly = res[1][j] / all;
+                    trfa = res[0][j] / (double)res[1][j];
+                    file.WriteLine(String.Format("{0}: {1:00}/{2:00}\t\t{3:0.00}%\t\t{4:0.00}%\t\t{5:0.00}", j, res[0][j], res[1][j], truly * 100, falsly * 100, trfa));
+                }
+            }
+        }
+
+        public static void PredictManyModels(string path)
+        {
+            string[] models = new string[3] { "model_0", "model_1", "model_2" };
+            string model;
+            List<int[]> res;
+
+            model = Path.Combine(path, "0_len_hidden");
+            for (int i = 0; i < 3; i++)
+            {
+                modelPath = Path.Combine(model, models[i]);
+                res = Predict();
+                SavePredict(res, modelPath);
+            }
+
+            model = Path.Combine(path, "1_capacity_hidden");
+            for (int i = 0; i < 3; i++)
+            {
+                modelPath = Path.Combine(model, models[i]);
+                res = Predict();
+                SavePredict(res, modelPath);
+            }
+
+            model = Path.Combine(path, "2_size_batch");
+            for (int i = 0; i < 3; i++)
+            {
+                modelPath = Path.Combine(model, models[i]);
+                res = Predict();
+                SavePredict(res, modelPath);
+            }
+
+            model = Path.Combine(path, "3_size_batch");
+            for (int i = 0; i < 3; i++)
+            {
+                modelPath = Path.Combine(model, models[i]);
+                res = Predict();
+                SavePredict(res, modelPath);
+            }
         }
 
         public static void TrainManyModels(string basePath)
@@ -59,17 +123,7 @@ namespace Mnist
                 width = widths[i];
                 times.Add(Train());
             }
-
-            using (System.IO.StreamWriter file =
-            new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
-            {
-                int i = 0;
-                foreach (var t in times)
-                {
-                    file.Write( $"train model_{i}: {t}ms" );
-                }
-                times.Clear();
-            }
+            SaveTime(path, times);
 
             widths = new List<int>[3]
             {
@@ -83,19 +137,10 @@ namespace Mnist
             for (int i = 0; i < widths.Length; i++)
             {
                 modelPath = Path.Combine(path, $"model_{i}");
+                width = widths[i];
                 times.Add(Train());
             }
-
-            using (System.IO.StreamWriter file =
-new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
-            {
-                int i = 0;
-                foreach (var t in times)
-                {
-                    file.Write($"train model_{i}: {t}ms");
-                }
-                times.Clear();
-            }
+            SaveTime(path, times);
 
             path = Path.Combine(basePath, $"2_size_batch");
             if (!Directory.Exists(path))
@@ -108,17 +153,7 @@ new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
                 trainBatch = batches[i];
                 times.Add(Train());
             }
-
-            using (System.IO.StreamWriter file =
-new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
-            {
-                int i = 0;
-                foreach (var t in times)
-                {
-                    file.Write($"train model_{i}: {t}ms");
-                }
-                times.Clear();
-            }
+            SaveTime(path, times);
 
             trainBatch /= 2;
             path = Path.Combine(basePath, $"3_size_batch");
@@ -131,7 +166,11 @@ new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
                 trainEpoch = epoches[i];
                 times.Add(Train());
             }
+            SaveTime(path, times);
+        }
 
+        private static void SaveTime(string path, List<double> times)
+        {
             using (System.IO.StreamWriter file =
 new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
             {
@@ -154,7 +193,7 @@ new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
             return a;
         }
 
-        public static void Predict()
+        public static List<int[]> Predict()
         {
             Model m = new Model();
             m.Load(modelPath);
@@ -190,6 +229,7 @@ new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
                 logger.Error(
                     String.Format("{0}: {1:00}/{2:00}\t\t{3:0.00}%\t\t{4:0.00}%\t\t{5:0.00}", i, right[i], falsive[i], truly*100, falsly * 100, trfa));
             }
+            return new List<int[]>() { right, falsive };
         }
 
         public static Vector<double> Predict(byte[] image)
@@ -218,7 +258,8 @@ new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
 
             Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, trainMatrixRandomCenter, trainMatrixRandomOffset, trainReLUCoef, trainSigmoidCoef);
 
-            m.LogEpoch = 3;
+            m.LogEpoch = logEpoch;
+            m.LogBatch = logBatch;
 
             m.Train(data, trainEpoch, trainBatch, trainTeachRate, loss);
             m.Save(modelPath);
