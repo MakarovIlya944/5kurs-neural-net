@@ -26,16 +26,20 @@ namespace Mnist
         public static double trainMatrixRandomCenter = 0;
         public static double trainMatrixRandomOffset = 1E-3;
         public static double trainReLUCoef = 1;
-        public static double trainSigmoidCoef = 0.01;
+        public static double trainSigmoidCoef = 1;
+        public static int logEpoch = 3, logBatch = 5;
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World! Version 3\n");
-            //TrainManyModels(modelPath);
-            //PredictManyModels(@"D:\Projects\Mnist\NeuralNet\Ready\Models");
+            Console.WriteLine("Hello World! Version 5\n");
+            //int inputSize = 784;
+            //width = new List<int>() { inputSize, inputSize / 2 };
+            //modelPath = Path.Combine(basePath, @"ready\newModel");
             //Train();
-            modelPath = @"D:\Projects\Mnist\NeuralNet\Ready\Models\0_len_hidden\model_2";
-            Predict();
+            //Predict();
+            //TrainManyModels(modelPath);
+            PredictManyModels(@"D:\Projects\Mnist\NeuralNet\Ready\Models");
+            //modelPath = @"D:\Projects\Mnist\NeuralNet\Ready\Models\0_len_hidden\model_2";
             Console.WriteLine("Good bye World!");
             Console.ReadLine();
         }
@@ -254,7 +258,8 @@ new System.IO.StreamWriter(Path.Combine(path, $"times.txt")))
 
             Model m = new Model(deep, width.ToArray(), 1, 1, inputSize, outputSize, true, trainMatrixRandomCenter, trainMatrixRandomOffset, trainReLUCoef, trainSigmoidCoef);
 
-            m.LogEpoch = 3;
+            m.LogEpoch = logEpoch;
+            m.LogBatch = logBatch;
 
             m.Train(data, trainEpoch, trainBatch, trainTeachRate, loss);
             m.Save(modelPath);

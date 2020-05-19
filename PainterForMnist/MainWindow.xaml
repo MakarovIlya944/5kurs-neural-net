@@ -78,7 +78,7 @@
             <Button Content="Train" Click="TrainButton_Click"/>
             </StackPanel>
         </StackPanel>
-        <Border BorderThickness="2" BorderBrush="Gray" >
+        <Border BorderThickness="2" BorderBrush="Gray" Background="Green" >
             <InkCanvas Name="PaintCanvas" Width="780" Height="780"/>
         </Border>
     </DockPanel>
